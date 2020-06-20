@@ -14,6 +14,21 @@ function readFile(file, type, callback) {
 	rawFile.send(null);
 }
 
+function getSyncStorage(key) {
+	try{
+		chrome.storage.sync.get([key], result=>{
+			if (result[key]) return result[key];
+		});
+	}catch(e){}
+	return localStorage.getItem(key);
+}
+function setSyncStorage(key, value) {
+	localStorage.setItem(key, value);
+	try{
+		chrome.storage.sync.set({key: value}, ()=>{});
+	}catch(e){}
+}
+
 function loadFeeds(name, dataArray, container, lastcheck){
 	var [url, regexStr, prefix] = dataArray;
 	var prefix = prefix ? prefix : "";
@@ -102,7 +117,7 @@ function appendListToSidebar(links, cropLinks=true) {
 	nQuickLinks = quickLinksURLs.length;
 	for (var i=0; i < links.length; i++) {
 		var link = links[i].hasOwnProperty("tab") ? links[i].tab : links[i];
-		if (!link.hasOwnProperty("url") || link.url.startsWith("edge://")){
+		if (!link.hasOwnProperty("url") || link.url.startsWith("chrome.//")){
 			continue;
 		}
 		var linkIsIn = link.url.includes.bind(link.url);
@@ -193,13 +208,14 @@ document.addEventListener("DOMContentLoaded", function(e) {
 		chrome.sessions.getRecentlyClosed(appendListToSidebar);
 		chrome.topSites.get(appendListToSidebar);
 		chrome.bookmarks.getSubTree(otherBookmarksId, function(bookmarkTree){
-			var musicLinks = bookmarkTree[0].children.find(e => e.title=="m").children;
+			let musicLinks = bookmarkTree[0].children.find(e => e.title=="m").children;
 			appendListToSidebar(musicLinks, false);
 		});
 	}
 
-	var feedsContainer = document.getElementById("feeds");
 	// Load links and feeds from file
+	var feedsContainer = getElemById("feeds");
+
 	var jsonFileHandler = function(responseText){
 		var data = JSON.parse(responseText);
 		let localQuickLinks = JSON.parse(localStorage.getItem("quick-links"));
@@ -217,30 +233,30 @@ document.addEventListener("DOMContentLoaded", function(e) {
 
 		var feedsToggleHandler = function(){
 			this.removeEventListener("toggle", feedsToggleHandler);
-			var lastcheck = new Date(localStorage.getItem("lastcheck"));
+			var lastcheck = new Date(getSyncStorage("lastcheck"));
 
 			webfeeds = data.feeds.Web;
 			for(obj in webfeeds){
 				loadFeeds(obj, webfeeds[obj], feedsContainer, lastcheck);
 			}
-			localStorage.setItem("lastcheck", new Date);
+			setSyncStorage("lastcheck", new Date);
 		}
 		feedsContainer.addEventListener("toggle", feedsToggleHandler);
 	}
 
-	var staticLinks = sessionStorage.getItem("staticLinks");
+	var staticLinks = getSyncStorage("staticLinks");
 	if (staticLinks){
 		jsonFileHandler(staticLinks);
-	}
-	else{
+	}else{
 		readFile("links.json",
 			"application/json",
 			file => {
 				responseText = file.responseText;
-				sessionStorage.setItem("staticLinks", responseText);
+				setSyncStorage("staticLinks", responseText)
+				//sessionStorage.setItem("staticLinks", responseText);
 				jsonFileHandler(responseText);
-			}
-	);}
+			});
+	}
 
 	// Bind bookmark editing buttons
 	getElemById("quick-links-add").addEventListener("click", e=>{
@@ -256,63 +272,83 @@ document.addEventListener("DOMContentLoaded", function(e) {
 	getElemById("quick-links-del").addEventListener("click", e=>{
 		setBookmarkClickEvent("darkred", delBookmark)});
 
-	// Load notes if it exists in localStorage
-	var notepad = getElemById("notepad");
-	notepad.value = localStorage.getItem("notes");
-	try{
-		browser.storage.sync.get(["notes"], result=>{
-			if (result.notes){
-				notepad.value = result.notes;
-				console.log(result);
-			}
-		});
-	}catch(e){console.log(e);}
-	notepad.hidden = !localStorage.getItem("showNotes");
-	getElemById("btn-toggle-notes").innerHTML = notepad.hidden?"&#x25BD;":"&#x25B3";
+	// Load notes
+	var noteSection = getElemById("noteSection");
+	noteSection.hidden = !localStorage.getItem("showNotes");
+	getElemById("btn-toggle-notes").innerHTML = noteSection.hidden?"&#x25BD;":"&#x25B3;";
 
+	var notepad = noteSection.children[0];
+	notepad.value = localStorage.getItem("localnotes");
 
+	// Load synced notes
+	for (var i = 1; i < noteSection.children.length; i++) {
+		notepad = noteSection.children[i];
+		notepad.value = getSyncStorage("notes" + i);
+	}
+	
 	// Eventlisteners for notes
 	var saveNotes = function(){
-		localStorage.setItem("notes", notepad.value);
-		browser.storage.sync.set({"notes": notepad.value}, function(){});
-	};
-	var resizeNotes = function(){
-		if (notepad.style.width != "100%"){
-			notepad.style.width = "100%";
-			notepad.style.height = "95%";
-			notepad.scrollIntoView(true);
-		}else{
-			notepad.style.width = "57%";
-			notepad.style.height = "50%";
+		localStorage.setItem("localnotes", noteSection.children[0].value);
+		for (var i = 1; i < noteSection.children.length; i++) {
+			setSyncStorage("notes" + i, noteSection.children[i].value);
 		}
 	};
-	var toggleNotes = function(){
-		if (notepad.hidden){
+	var resizeNotes = function(e){
+		noteSection.style.height = "100%";
+		var view = parseInt(sessionStorage.getItem("notesview"));
+
+		if (isNaN(view) || view == 4 || e.altKey) {
+			for (var i = 0; i < noteSection.children.length; i++) {
+				noteSection.children[i].hidden = false;
+				noteSection.children[i].style.width = "49%";
+				noteSection.children[i].style.height = "40%";
+			}
+			view = 0;
+		} else {
+			for (var i = 0; i < noteSection.children.length; i++) {
+				if (view != i) noteSection.children[i].hidden = true;
+			}
+			let notepad = noteSection.children[view++];
 			notepad.hidden = false;
+			notepad.style.width = "100%";
+			notepad.style.height = "100%";
+			notepad.scrollIntoView(true);
+		}
+
+		sessionStorage.setItem("notesview", view);
+	};
+	var toggleNotes = function(){
+		if (noteSection.hidden){
+			noteSection.hidden = false;
 			localStorage.setItem("showNotes", 1);
 			getElemById("btn-toggle-notes").innerHTML = "&#x25B3;";
 
 		}else{
-			notepad.hidden = true;
+			noteSection.hidden = true;
 			localStorage.setItem("showNotes", "");
 			getElemById("btn-toggle-notes").innerHTML = "&#x25BD;";
 		}
 	};
+
 	getElemById("btn-save-notes").addEventListener("click", saveNotes);
 	getElemById("btn-resize-notes").addEventListener("click", resizeNotes);
 	getElemById("btn-toggle-notes").addEventListener("click", toggleNotes);
-	notepad.addEventListener("keydown", e=>{
+	window.addEventListener("keydown", e=>{
 		if (e.ctrlKey && e.key == "s"){
 			e.preventDefault();
 			saveNotes();
 		}
-		else if (e.altKey && e.key == "t"){
+		else if (e.altKey && e.key == "q"){
 			e.preventDefault();
-			resizeNotes();
+			resizeNotes({altKey:false});
+		}
+		else if (e.altKey && e.key == "w"){
+			e.preventDefault();
+			resizeNotes({altKey:true});
 		}
 		else if (e.altKey && e.keyCode == 40){
 			e.preventDefault();
-			hideNotes();
+			toggleNotes();
 		}
 	});
 
@@ -351,7 +387,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
 		sidebar.style.display = e.clientY>5 && (ww-mx<20 || (visible && ww-sw-mx<0)) ? "flex" : "none";
 	});
 
-	// Focus on searchbar
+	// Focus on searchbar. Doesn't work in add-on form, which is intended
 	searchbar.focus();
 });
 //window.onload = function(){}

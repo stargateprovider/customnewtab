@@ -6,7 +6,9 @@
 	{"url": "https://onedrive.live.com/", "favIconUrl": "onedrive.ico"},
 	{"url": "https://www.github.com", "favIconUrl": "https://www.github.com/favicon.ico"},
 	{"url": "https://stargateprovider.github.io/infoleht", "favIconUrl": "https://stargateprovider.github.io/infoleht/images/icon32.png"},
-	{"url": "https://www.swedbank.ee/private", "favIconUrl": "https://www.swedbank.ee/favicon.ico"}
+	{"url": "https://www.swedbank.ee/private", "favIconUrl": "https://www.swedbank.ee/favicon.ico"},
+	{"url": "https://www.tpilet.ee/","favIconUrl":"https://www.tpilet.ee/favicon.ico"},
+	{"url": "https://elron.pilet.ee/et/","favIconUrl":"https://elron.pilet.ee/assets/favicon.ico"}
 ],
 "slowLinks": [[
 	{"title":"FTL mods", "url":"https://subsetgames.com/forum/viewforum.php?f=10"},
@@ -19,7 +21,9 @@
 	{"title":"Imgur", "url":"https://imgur.com/"},
 	{"title":"MediaFire", "url":"https://www.mediafire.com/#myfiles"},
 	{"title":"Sendspace", "url":"https://www.sendspace.com/"},
-	{"title":"JS Minifier", "url":"https://javascript-minifier.com/"}
+	{"title":"JS Minifier", "url":"https://javascript-minifier.com/"},
+	{"title":"PDF OCR (searchable)", "url":"https://www.pdfconvertonline.com/pdf-to-pdf-ocr-online.html"},
+	{"title":"y2mate", "url":"https://www.y2mate.com/en2/youtube"}
 	], [
 	{"title":"PythonSpeed/PerformanceTips - Python Wiki", "url":"https://wiki.python.org/moin/PythonSpeed/PerformanceTips"},
 	{"title":"BunsenLabs Linux", "url":"https://www.bunsenlabs.org/index.html"},
@@ -27,7 +31,6 @@
 	{"title":"Simple DirectMedia Layer - Homepage", "url":"https://www.libsdl.org/"},
 	{"title":"TempleOS", "url":"https://templeos.org/"},
 	{"title":"Shrine: A TempleOS distro for heretics", "url":"https://github.com/minexew/Shrine"},
-	{"title":"'TempleOS' Stickers | Redbubble", "url":"https://www.redbubble.com/people/finesseapparel/works/24158661-templeos?p=sticker&size=small"},
 	{"title":"Dore tindikassett HP 364XL - Inktoner", "url":"https://inktoner.ee/et/hp/90-dore-ink-cartridge-hp-cb321ee-cn684ee-364xl-6950840619617.html"}
 	], [
 	{"title":"Võistlusprogrammeerimine", "url":"http://www.targotennisberg.com/eio/VP/"},
