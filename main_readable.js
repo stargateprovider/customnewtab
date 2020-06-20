@@ -260,12 +260,13 @@ document.addEventListener("DOMContentLoaded", function(e) {
 	var notepad = getElemById("notepad");
 	notepad.value = localStorage.getItem("notes");
 	try{
-		chrome.storage.sync.get(["notes"], result=>{
+		browser.storage.sync.get(["notes"], result=>{
 			if (result.notes){
 				notepad.value = result.notes;
+				console.log(result);
 			}
 		});
-	}catch(e){}
+	}catch(e){console.log(e);}
 	notepad.hidden = !localStorage.getItem("showNotes");
 	getElemById("btn-toggle-notes").innerHTML = notepad.hidden?"&#x25BD;":"&#x25B3";
 
@@ -273,7 +274,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
 	// Eventlisteners for notes
 	var saveNotes = function(){
 		localStorage.setItem("notes", notepad.value);
-		chrome.storage.sync.set({"notes": notepad.value}, function(){});
+		browser.storage.sync.set({"notes": notepad.value}, function(){});
 	};
 	var resizeNotes = function(){
 		if (notepad.style.width != "100%"){
