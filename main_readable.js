@@ -14,21 +14,6 @@ function readFile(file, type, callback) {
 	rawFile.send(null);
 }
 
-function getSyncStorage(key) {
-	try{
-		chrome.storage.sync.get([key], result=>{
-			if (result[key]) return result[key];
-		});
-	}catch(e){}
-	return localStorage.getItem(key);
-}
-function setSyncStorage(key, value) {
-	localStorage.setItem(key, value);
-	try{
-		chrome.storage.sync.set({key: value}, ()=>{});
-	}catch(e){}
-}
-
 function loadFeeds(name, dataArray, container, lastcheck){
 	var [url, regexStr, prefix] = dataArray;
 	var prefix = prefix ? prefix : "";
@@ -233,30 +218,37 @@ document.addEventListener("DOMContentLoaded", function(e) {
 
 		var feedsToggleHandler = function(){
 			this.removeEventListener("toggle", feedsToggleHandler);
-			var lastcheck = new Date(getSyncStorage("lastcheck"));
-
-			webfeeds = data.feeds.Web;
-			for(obj in webfeeds){
-				loadFeeds(obj, webfeeds[obj], feedsContainer, lastcheck);
-			}
-			setSyncStorage("lastcheck", new Date);
+			var key = "lastcheck";
+			chrome.storage.sync.get([key], result => {
+				var lastcheck = localStorage.getItem(key);
+				if (result[key]) {
+					lastcheck = result[key];
+				}
+				webfeeds = data.feeds.Web;
+				for(obj in webfeeds){
+					loadFeeds(obj, webfeeds[obj], feedsContainer, lastcheck);
+				}
+			});
+			chrome.storage.sync.set({[key]: new Date});
 		}
 		feedsContainer.addEventListener("toggle", feedsToggleHandler);
 	}
 
-	var staticLinks = getSyncStorage("staticLinks");
-	if (staticLinks){
-		jsonFileHandler(staticLinks);
-	}else{
-		readFile("links.json",
-			"application/json",
-			file => {
-				responseText = file.responseText;
-				setSyncStorage("staticLinks", responseText)
-				//sessionStorage.setItem("staticLinks", responseText);
-				jsonFileHandler(responseText);
-			});
-	}
+	chrome.storage.sync.get("staticLinks", result => {
+		if (result["staticLinks"]){
+			jsonFileHandler(result["staticLinks"]);
+		} else {
+			readFile("links.json",
+				"application/json",
+				file => {
+					responseText = file.responseText;
+					chrome.storage.sync.set({"staticLinks": responseText})
+					//sessionStorage.setItem("staticLinks", responseText);
+					jsonFileHandler(responseText);
+				});
+		}
+	});
+
 
 	// Bind bookmark editing buttons
 	getElemById("quick-links-add").addEventListener("click", e=>{
@@ -281,16 +273,34 @@ document.addEventListener("DOMContentLoaded", function(e) {
 	notepad.value = localStorage.getItem("localnotes");
 
 	// Load synced notes
-	for (var i = 1; i < noteSection.children.length; i++) {
-		notepad = noteSection.children[i];
-		notepad.value = getSyncStorage("notes" + i);
+	try{
+		chrome.storage.sync.get(result => {
+			for (var i = 1; i < noteSection.children.length; i++) {
+				var key = "notes" + i;
+				if (!result[key]) result[key] = localStorage.getItem(key);
+				noteSection.children[i].value = result[key];
+			}
+		});
+	} catch(e) {
+		console.log(e);
+		for (var i = 1; i < noteSection.children.length; i++) {
+			localStorage.getItem("notes" + i);
+		}
 	}
 	
 	// Eventlisteners for notes
 	var saveNotes = function(){
 		localStorage.setItem("localnotes", noteSection.children[0].value);
+
 		for (var i = 1; i < noteSection.children.length; i++) {
-			setSyncStorage("notes" + i, noteSection.children[i].value);
+			var key = "notes" + i;
+			var value = noteSection.children[i].value;
+			try {
+				chrome.storage.sync.set({[key]: value}, ()=>{});
+			} catch(e) {
+				console.log(e);
+				localStorage.setItem(key, value);
+			}
 		}
 	};
 	var resizeNotes = function(e){
