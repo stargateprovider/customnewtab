@@ -243,7 +243,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
 	}
 
 	var loadStaticLinks = result => {
-		if (result != null && result["staticLinks"]){
+		if (result["staticLinks"] !== undefined) {
 			jsonFileHandler(result["staticLinks"]);
 		} else {
 			readFile("links.json",
@@ -263,7 +263,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
 	if (syncStorage !== undefined) {
 		syncStorage.get("staticLinks", loadStaticLinks);
 	} else {
-		loadStaticLinks(localStorage.getItem("staticLinks"));
+		loadStaticLinks({"staticLinks": localStorage.getItem("staticLinks")});
 	}
 
 
