@@ -243,7 +243,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
 	}
 
 	var loadStaticLinks = result => {
-		if (result["staticLinks"]){
+		if (result && result["staticLinks"]){
 			jsonFileHandler(result["staticLinks"]);
 		} else {
 			readFile("links.json",
