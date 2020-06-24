@@ -260,7 +260,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
 	if (syncStorage !== undefined) {
 		syncStorage.get("staticLinks", loadStaticLinks);
 	} else {
-		loadStaticLinks(localStorage.get("staticLinks"));
+		loadStaticLinks(localStorage.getItem("staticLinks"));
 	}
 
 
