@@ -182,19 +182,23 @@ document.addEventListener("DOMContentLoaded", function(e) {
 	var getElemById = document.getElementById.bind(document);
 
 	// Determine if we are local
-	var otherBookmarksId;
+	var otherBookmarksId, syncStorage;
 	if (window.location.origin.startsWith("chrome-extension://")){
-		otherBookmarksId = "2";}
-	else if (window.location.origin.startsWith("moz-extension://")){
-		otherBookmarksId = "unfiled_____";}
+		otherBookmarksId = "2";
+		syncStorage = chrome.storage.sync;
+	} else if (window.location.origin.startsWith("moz-extension://")){
+		otherBookmarksId = "unfiled_____";
+		syncStorage = browser.storage.sync;
+	}
 
 	if (typeof otherBookmarksId !== "undefined"){
 		// Load links from bookmarks and recently closed
 		chrome.sessions.getRecentlyClosed(appendListToSidebar);
 		chrome.topSites.get(appendListToSidebar);
 		chrome.bookmarks.getSubTree(otherBookmarksId, function(bookmarkTree){
-			let musicLinks = bookmarkTree[0].children.find(e => e.title=="m").children;
-			appendListToSidebar(musicLinks, false);
+			let otherBookmarks = bookmarkTree[0].children;
+			appendListToSidebar(otherBookmarks.find(e => e.title=="m").children, false);
+			appendListToSidebar(otherBookmarks.find(e => e.title=="a").children, false);
 		});
 	}
 
@@ -219,22 +223,26 @@ document.addEventListener("DOMContentLoaded", function(e) {
 		var feedsToggleHandler = function(){
 			this.removeEventListener("toggle", feedsToggleHandler);
 			var key = "lastcheck";
-			chrome.storage.sync.get([key], result => {
-				var lastcheck = localStorage.getItem(key);
-				if (result[key]) {
-					lastcheck = result[key];
-				}
-				webfeeds = data.feeds.Web;
-				for(obj in webfeeds){
-					loadFeeds(obj, webfeeds[obj], feedsContainer, lastcheck);
-				}
-			});
-			chrome.storage.sync.set({[key]: new Date});
+			var lastcheck = localStorage.getItem(key);
+
+			if (syncStorage !== undefined) {
+				syncStorage.get([key], result => {
+					if (result[key]) {
+						lastcheck = result[key];
+					}
+				});
+				syncStorage.set({[key]: new Date});
+			}
+			webfeeds = data.feeds.Web;
+			for(obj in webfeeds){
+				loadFeeds(obj, webfeeds[obj], feedsContainer, lastcheck);
+			}
+			console.log(lastcheck);
 		}
 		feedsContainer.addEventListener("toggle", feedsToggleHandler);
 	}
 
-	chrome.storage.sync.get("staticLinks", result => {
+	var loadStaticLinks = result => {
 		if (result["staticLinks"]){
 			jsonFileHandler(result["staticLinks"]);
 		} else {
@@ -242,12 +250,18 @@ document.addEventListener("DOMContentLoaded", function(e) {
 				"application/json",
 				file => {
 					responseText = file.responseText;
-					chrome.storage.sync.set({"staticLinks": responseText})
+					syncStorage.set({"staticLinks": responseText})
 					//sessionStorage.setItem("staticLinks", responseText);
 					jsonFileHandler(responseText);
 				});
 		}
-	});
+	}
+
+	if (syncStorage !== undefined) {
+		syncStorage.get("staticLinks", loadStaticLinks);
+	} else {
+		loadStaticLinks(localStorage.get("staticLinks"));
+	}
 
 
 	// Bind bookmark editing buttons
@@ -273,18 +287,17 @@ document.addEventListener("DOMContentLoaded", function(e) {
 	notepad.value = localStorage.getItem("localnotes");
 
 	// Load synced notes
-	try{
-		chrome.storage.sync.get(result => {
+	if (syncStorage !== undefined) {
+		syncStorage.get(result => {
 			for (var i = 1; i < noteSection.children.length; i++) {
 				var key = "notes" + i;
 				if (!result[key]) result[key] = localStorage.getItem(key);
 				noteSection.children[i].value = result[key];
 			}
 		});
-	} catch(e) {
-		console.log(e);
+	} else {
 		for (var i = 1; i < noteSection.children.length; i++) {
-			localStorage.getItem("notes" + i);
+			noteSection.children[i].value = localStorage.getItem("notes" + i);
 		}
 	}
 	
@@ -295,10 +308,9 @@ document.addEventListener("DOMContentLoaded", function(e) {
 		for (var i = 1; i < noteSection.children.length; i++) {
 			var key = "notes" + i;
 			var value = noteSection.children[i].value;
-			try {
-				chrome.storage.sync.set({[key]: value}, ()=>{});
-			} catch(e) {
-				console.log(e);
+			if (syncStorage !== undefined) {
+				syncStorage.set({[key]: value}, ()=>{});
+			} else {
 				localStorage.setItem(key, value);
 			}
 		}
