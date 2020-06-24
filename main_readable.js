@@ -250,8 +250,11 @@ document.addEventListener("DOMContentLoaded", function(e) {
 				"application/json",
 				file => {
 					responseText = file.responseText;
-					syncStorage.set({"staticLinks": responseText})
-					//sessionStorage.setItem("staticLinks", responseText);
+					if (syncStorage !== undefined) {
+						syncStorage.set({"staticLinks": responseText});
+					} else {
+						localStorage.setItem("staticLinks", responseText);
+					}
 					jsonFileHandler(responseText);
 				});
 		}
