@@ -3,7 +3,7 @@ var quickLinksURLs = [];
 var bookmarkColor = "#333"
 
 function readFile(file, type, callback) {
-	var rawFile = new XMLHttpRequest();
+	const rawFile = new XMLHttpRequest();
 	rawFile.overrideMimeType(type);
 	rawFile.open("GET", file, true);
 	rawFile.onload = function() {
@@ -14,13 +14,15 @@ function readFile(file, type, callback) {
 	rawFile.send(null);
 }
 
-function loadFeeds(name, dataArray, container, lastcheck){
-	var [url, regexStr, prefix] = dataArray;
+function loadFeeds(feedsArray, container, lastcheck){
+	const newElem = document.createElement.bind(document);
+	for (name in feedsArray) {
+
+	var [url, regexStr, prefix] = feedsArray[name];
 	var prefix = prefix ? prefix : "";
 
-	var newElem = document.createElement.bind(document);
 	var details = newElem("details");
-	var summary = details.appendChild(newElem("summary"));
+	let summary = details.appendChild(newElem("summary"));
 	summary.appendChild(document.createTextNode(name));
 
 	var processFeed = function(file) {
@@ -64,17 +66,22 @@ function loadFeeds(name, dataArray, container, lastcheck){
 	}
 
 	if (Array.isArray(url)){
-		for (i=0; i<url.length; i++){
+		for (i=url.length; i--;){
 			readFile(url[i], "text/xml", processFeed);
 		}
 	} else {
 		readFile(url, "text/xml", processFeed);
 	}
+	}
 }
 
-function fetchFavicon(url, crop=false){
-	if (crop){
-		url = url.slice(0, url.slice(8).indexOf('/') + 9);
+function fetchFavicon(url) {
+	if (/^(edge|file)/.test(url)) {
+		return "";
+	}
+	slashIndex = url.slice(8).indexOf('/');
+	if (slashIndex > -1) {
+		url = url.slice(0, slashIndex + 9);
 	}
 	return "https://www.google.com/s2/favicons?domain=" + url;
 }
@@ -94,10 +101,10 @@ function appendToQuickLinks(links) {
 		quickLinksURLs.push(links[i].url);
 	}
 }
-function appendListToSidebar(links, cropLinks=true) {
-	var newElem = document.createElement.bind(document)
-	var container = document.getElementById("sidebar");
-	var ol = newElem("ul");
+function appendListToSidebar(links) {
+	const newElem = document.createElement.bind(document)
+	const container = document.getElementById("sidebar");
+	var ul = newElem("ul");
 
 	nQuickLinks = quickLinksURLs.length;
 	for (var i=0; i < links.length; i++) {
@@ -110,16 +117,16 @@ function appendListToSidebar(links, cropLinks=true) {
 			if (linkIsIn(quickLinksURLs[j])) {continue;}
 		}
 
-		var li = ol.appendChild(newElem("li"));
-		var a = li.appendChild(newElem("a"));
+		//var li = ;
+		var a = ul.appendChild(newElem("li")).appendChild(newElem("a"));
 		a.href = link.url;
 		a.appendChild(document.createTextNode(link.title));
 
 		var icon = new Image();
-		icon.src = link.favIconUrl ? link.favIconUrl : fetchFavicon(link.url, cropLinks);
+		icon.src = link.favIconUrl ? link.favIconUrl : fetchFavicon(link.url);
 		a.insertAdjacentElement("afterbegin", icon);
 	}
-	container.appendChild(ol);
+	container.appendChild(ul);
 }
 
 function addBookmark(event){
@@ -168,7 +175,7 @@ function delBookmark(event){
 function setBookmarkClickEvent(bg, func=undefined){
 	let bookmarks = document.getElementsByClassName("bookmark");
 	bookmarkColor = bookmarkColor != bg ? bg : "#333";
-	for (let i=0; i<bookmarks.length; i++){
+	for (let i=bookmarks.length; i--;){
 		bookmarks[i].removeEventListener("click", delBookmark);
 		bookmarks[i].removeEventListener("click", moveBookmark);
 		bookmarks[i].style.background = bookmarkColor;
@@ -179,7 +186,7 @@ function setBookmarkClickEvent(bg, func=undefined){
 }
 
 document.addEventListener("DOMContentLoaded", function(e) {
-	var getElemById = document.getElementById.bind(document);
+	const getElemById = document.getElementById.bind(document);
 
 	// Determine if we are local
 	var otherBookmarksId, syncStorage;
@@ -190,78 +197,74 @@ document.addEventListener("DOMContentLoaded", function(e) {
 		otherBookmarksId = "unfiled_____";
 		syncStorage = browser.storage.sync;
 	}
+	//console.log("Using " + (syncStorage ? "synced" : "local") + " storage");
 
-	if (typeof otherBookmarksId !== "undefined"){
+	if (otherBookmarksId !== undefined){
 		// Load links from bookmarks and recently closed
 		chrome.sessions.getRecentlyClosed(appendListToSidebar);
 		chrome.topSites.get(appendListToSidebar);
 		chrome.bookmarks.getSubTree(otherBookmarksId, function(bookmarkTree){
 			let otherBookmarks = bookmarkTree[0].children;
-			appendListToSidebar(otherBookmarks.find(e => e.title=="m").children, false);
-			appendListToSidebar(otherBookmarks.find(e => e.title=="a").children, false);
+			appendListToSidebar(otherBookmarks.find(e => e.title=="m").children);
+			appendListToSidebar(otherBookmarks.find(e => e.title=="a").children);
 		});
 	}
 
 	// Load links and feeds from file
-	var feedsContainer = getElemById("feeds");
-
-	var jsonFileHandler = function(responseText){
-		var data = JSON.parse(responseText);
+	let jsonDataHandler = responseText => {
+		var staticData = JSON.parse(responseText);
+		
 		let localQuickLinks = JSON.parse(localStorage.getItem("quick-links"));
-		if (localQuickLinks){
+		if (localQuickLinks) {
 			appendToQuickLinks(localQuickLinks);
 		} else {
-			localStorage.setItem("quick-links", JSON.stringify(data.quickLinks));
-			appendToQuickLinks(data.quickLinks);
+			localStorage.setItem("quick-links", JSON.stringify(staticData.quickLinks));
+			appendToQuickLinks(staticData.quickLinks);
 		}
 
-		linksArrayLen = data.slowLinks.length;
+		linksArrayLen = staticData.slowLinks.length;
 		for (let i=0; i < linksArrayLen; i++){
-			appendListToSidebar(data.slowLinks[i], false);
+			appendListToSidebar(staticData.slowLinks[i]);
 		}
 
-		var feedsToggleHandler = function(){
-			this.removeEventListener("toggle", feedsToggleHandler);
-			var key = "lastcheck";
-			var lastcheck = localStorage.getItem(key);
+		const feedsContainer = getElemById("feeds");
 
-			if (syncStorage !== undefined) {
+		var feedsToggleHandler = ()=>{
+			this.removeEventListener("toggle", feedsToggleHandler);
+			const key = "lastcheck";
+			
+			if (syncStorage) {
 				syncStorage.get([key], result => {
-					if (result[key]) {
-						lastcheck = result[key];
-					}
+					loadFeeds(staticData.feeds.Web, feedsContainer, result[key]);
 				});
 				syncStorage.set({[key]: new Date});
+			} else {
+				loadFeeds(staticData.feeds.Web, feedsContainer, localStorage.getItem(key));
+				localStorage.setItem(key, new Date);
 			}
-			webfeeds = data.feeds.Web;
-			for(obj in webfeeds){
-				loadFeeds(obj, webfeeds[obj], feedsContainer, lastcheck);
-			}
-			console.log(lastcheck);
 		}
 		feedsContainer.addEventListener("toggle", feedsToggleHandler);
 	}
 
-	var loadStaticLinks = result => {
-		if (result["staticLinks"] !== undefined && result["staticLinks"] !== null) {
-			jsonFileHandler(result["staticLinks"]);
+	var loadStaticLinks = result=>{
+		if (result["staticLinks"]) {
+			jsonDataHandler(result["staticLinks"]);
 		} else {
 			readFile("links.json",
 				"application/json",
 				file => {
 					responseText = file.responseText;
-					if (syncStorage !== undefined) {
+					if (syncStorage) {
 						syncStorage.set({"staticLinks": responseText});
 					} else {
 						localStorage.setItem("staticLinks", responseText);
 					}
-					console.log(responseText);
-					jsonFileHandler(responseText);
+					jsonDataHandler(responseText);
 				});
 		}
 	}
 
-	if (syncStorage !== undefined) {
+	if (syncStorage) {
 		syncStorage.get("staticLinks", loadStaticLinks);
 	} else {
 		loadStaticLinks({"staticLinks": localStorage.getItem("staticLinks")});
@@ -283,7 +286,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
 		setBookmarkClickEvent("darkred", delBookmark)});
 
 	// Load notes
-	var noteSection = getElemById("noteSection");
+	const noteSection = getElemById("noteSection");
 	noteSection.hidden = !localStorage.getItem("showNotes");
 	getElemById("btn-toggle-notes").innerHTML = noteSection.hidden?"&#x25BD;":"&#x25B3;";
 
@@ -291,47 +294,47 @@ document.addEventListener("DOMContentLoaded", function(e) {
 	notepad.value = localStorage.getItem("localnotes");
 
 	// Load synced notes
-	if (syncStorage !== undefined) {
+	if (syncStorage) {
 		syncStorage.get(result => {
-			for (var i = 1; i < noteSection.children.length; i++) {
+			for (var i = noteSection.children.length; i--;) {
 				var key = "notes" + i;
 				if (!result[key]) result[key] = localStorage.getItem(key);
 				noteSection.children[i].value = result[key];
 			}
 		});
 	} else {
-		for (var i = 1; i < noteSection.children.length; i++) {
+		for (var i = noteSection.children.length; i--;) {
 			noteSection.children[i].value = localStorage.getItem("notes" + i);
 		}
 	}
 	
 	// Eventlisteners for notes
-	var saveNotes = function(){
+	var saveNotes = ()=>{
 		localStorage.setItem("localnotes", noteSection.children[0].value);
 
-		for (var i = 1; i < noteSection.children.length; i++) {
+		for (var i = noteSection.children.length; i--;) {
 			var key = "notes" + i;
 			var value = noteSection.children[i].value;
 			if (syncStorage !== undefined) {
-				syncStorage.set({[key]: value}, ()=>{});
+				syncStorage.set({[key]: value});
 			} else {
 				localStorage.setItem(key, value);
 			}
 		}
 	};
-	var resizeNotes = function(e){
+	var resizeNotes = e=>{
 		noteSection.style.height = "100%";
 		var view = parseInt(sessionStorage.getItem("notesview"));
 
 		if (isNaN(view) || view == 4 || e.altKey) {
-			for (var i = 0; i < noteSection.children.length; i++) {
+			for (var i = noteSection.children.length; i--;) {
 				noteSection.children[i].hidden = false;
 				noteSection.children[i].style.width = "49%";
 				noteSection.children[i].style.height = "40%";
 			}
 			view = 0;
 		} else {
-			for (var i = 0; i < noteSection.children.length; i++) {
+			for (var i = noteSection.children.length; i--;) {
 				if (view != i) noteSection.children[i].hidden = true;
 			}
 			let notepad = noteSection.children[view++];
@@ -343,7 +346,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
 
 		sessionStorage.setItem("notesview", view);
 	};
-	var toggleNotes = function(){
+	var toggleNotes = ()=>{
 		if (noteSection.hidden){
 			noteSection.hidden = false;
 			localStorage.setItem("showNotes", 1);
