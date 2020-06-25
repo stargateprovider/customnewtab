@@ -38,4 +38,10 @@
 	{"title":"Dashboard | HackerRank", "url":"https://www.hackerrank.com/dashboard"},
 	{"title":"Contests - Codeforces", "url":"https://codeforces.com/group/PjzGiggT71/contests?locale=en"},
 	{"title":"Sphere Online Judge (SPOJ) - Problems", "url":"https://www.spoj.com/problems/classical/sort=6"}
-]],"feeds":{"Web":{}}}
+]],"feeds": {
+	"Web": {
+		"Telegram": ["https://www.telegram.ee/feed"],
+		"TT": ["https://www.telegram.ee/feed"],
+		"O": ["https://www.reddit.com/r/outside/.rss"]
+	}
+}}
