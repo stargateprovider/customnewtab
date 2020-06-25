@@ -2,17 +2,10 @@
 <head>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width" />
-	<!--meta http-equiv="Access-Control-Allow-Origin" content="*" /-->
 	<link rel="stylesheet" type="text/css" href="main.css" />
 	<script src="main.js" defer></script>
 	<title>New tab</title>
 </head><body>
-<!--
-To convert from bookmarks.html (using Sublime Text replace function):
-	search:   [\S\s]+?<A.+?HREF="(.+?)".+?>(.+?)</A>[\S\s]
-	replace:  <li><a href="$1">$2</a></li>\n
--->
-
 <form id="searchForm" enctype="text/plain">
 	<input type="search" name="q" autofocus/><br />
 	&#x1F50D; >> <input type="image" src="https://www.google.com/favicon.ico" formaction="https://www.google.ee/search"/
@@ -53,20 +46,5 @@ To convert from bookmarks.html (using Sublime Text replace function):
 <button id="btn-save-notes">&#x1F5AB;</button>
 <button id="btn-resize-notes">&#x26F6;</button>
 <button id="btn-toggle-notes">&#x25B3;</button>
-<br />
-<section id="noteSection"><textarea></textarea><textarea></textarea><textarea></textarea><textarea></textarea></section>
-
-<details id="feeds">
-<summary>RSS feeds <button id="feeds-add">+</button><button id="feeds-del">–</button></summary>
-<div class="flex-container"></div>
-</details>
-<form id="feed-form" class="popup">
-	<input name="name" placeholder="Nimi"/>
-	<input name="url" placeholder="Voo URL"/>
-	<input name="regex" placeholder="Regex"/>
-	<input name="prefix" placeholder="URL prefiks"/>
-	<input type="submit" value="Lisa"/>
-</form>
-<div id="feednames" class="popup">Vali eemaldamiseks:<ul></ul></div>
-
+<br /><textarea id="notepad"></textarea>
 </body></html>

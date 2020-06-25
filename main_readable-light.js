@@ -1,4 +1,3 @@
-const REGEX_DEFAULT = "item>\\s*<title>(?<name>.+?)</title>[\\s\\S]*?<link>(?:<!\\[CDATA\\[)?(?<link>.+?)(?:\\]\\]>)?<[\\s\\S]+?pubDate>(?<date>.+?)<[\\s\\S]+?(?<desc><description>[\\s\\S]+?</description>)";
 var quickLinksURLs = [];
 var bookmarkColor = "#333"
 
@@ -12,64 +11,6 @@ function readFile(file, type, callback) {
 		}
 	}
 	rawFile.send(null);
-}
-
-function loadFeed(name, dataArray, container, lastcheck){
-	var [url, regexStr, prefix] = dataArray;
-	var prefix = prefix ? prefix : "";
-	const parser = new DOMParser();
-
-	const newElem = document.createElement.bind(document);
-	var details = newElem("details");
-	let summary = details.appendChild(newElem("summary"));
-	summary.appendChild(document.createTextNode(name));
-
-	let processFeed = function(file) {
-		if (!regexStr){
-			regexStr = REGEX_DEFAULT;
-		}
-		var data = file.responseText.matchAll(new RegExp(regexStr, "g"));
-		
-		var ul = newElem("ul");
-		var a, li, textarea, newEntry, match, matchGroup, doc, i = 0, newEntry = false;
-		while (!(match = data.next()).done && i++ < 30) {
-			matchGroup = match.value.groups;
-
-			li = ul.appendChild(newElem("li"));
-			a = li.appendChild(newElem("a"));
-			a.className = "tooltipBox";
-			a.href = parser.parseFromString(prefix+matchGroup.link, "text/html").documentElement.textContent;
-			a.appendChild(document.createTextNode(parser.parseFromString(matchGroup.name, "text/html").documentElement.textContent));
-
-			textarea = a.appendChild(newElem("textarea"));
-			textarea.className = "tooltipText";
-			textarea.setAttribute("readonly", "true");
-			textarea.appendChild(document.createTextNode(matchGroup.date));
-			if (matchGroup["desc"]){
-				doc = parser.parseFromString(matchGroup.desc, "text/html");
-				doc = parser.parseFromString(doc.documentElement.textContent.trim(), "text/html");
-				textarea.appendChild(document.createTextNode("\n\n"+doc.documentElement.textContent));
-			}
-
-			if (!lastcheck || new Date(matchGroup.date) >= lastcheck){
-				a.style.color = "cyan";
-				newEntry = true;
-			}
-		}
-
-		if (newEntry){
-			details.appendChild(ul);
-			container.appendChild(details);
-		}
-	}
-
-	if (Array.isArray(url)){
-		for (i=url.length; i--;){
-			readFile(url[i], "text/xml", processFeed);
-		}
-	} else {
-		readFile(url, "text/xml", processFeed);
-	}
 }
 
 function fetchFavicon(url) {
@@ -187,13 +128,11 @@ document.addEventListener("DOMContentLoaded", function(e) {
 	const getElemById = document.getElementById.bind(document);
 
 	// Determine if we are local
-	var otherBookmarksId, syncStorage;
+	var otherBookmarksId;
 	if (window.location.origin.startsWith("chrome-extension://")){
 		otherBookmarksId = "2";
-		syncStorage = chrome.storage.sync;
 	} else if (window.location.origin.startsWith("moz-extension://")){
 		otherBookmarksId = "unfiled_____";
-		syncStorage = browser.storage.sync;
 	}
 	//console.log("Using " + (syncStorage ? "synced" : "local") + " storage");
 
@@ -208,7 +147,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
 		});
 	}
 
-	// Load links and feeds from file
+	// Load links from file
 	let jsonDataHandler = responseText => {
 		var staticData = JSON.parse(responseText);
 		
@@ -224,56 +163,21 @@ document.addEventListener("DOMContentLoaded", function(e) {
 		for (let i=0; i < linksArrayLen;
 			appendListToSidebar(staticData.slowLinks[i++])
 		);
-
-		const feedsContainer = getElemById("feeds");
-
-		var feedsToggleHandler = ()=>{
-			this.removeEventListener("toggle", feedsToggleHandler);
-			const timeKey = "lastcheck"; //Key to Time
-			
-			if (syncStorage) {
-				syncStorage.get([timeKey, "feeds"], result => {
-					for (name in result["feeds"]) {
-						loadFeed(name, result["feeds"][name], feedsContainer, result[timeKey]);
-					}
-				});
-				syncStorage.set({[timeKey]: new Date});
-			} else {
-				const webfeeds = localStorage.getItem("feeds");
-				const lastcheck = localStorage.getItem(timeKey);
-				for (name in webfeeds) {
-					loadFeed(name, webfeeds[name], feedsContainer, lastcheck);
-				}
-				localStorage.setItem(timeKey, new Date);
-			}
-		}
-		feedsContainer.addEventListener("toggle", feedsToggleHandler);
 	}
 
-	var loadStaticLinks = result=>{
-		if (result["staticLinks"]) {
-			jsonDataHandler(result["staticLinks"]);
-		} else {
-			readFile("links.json",
-				"application/json",
-				file => {
-					responseText = file.responseText;
-					if (syncStorage) {
-						syncStorage.set({"staticLinks": responseText, "feeds": {}});
-					} else {
-						localStorage.setItem("staticLinks", responseText);
-						localStorage.setItem("feeds", {})
-					}
-					jsonDataHandler(responseText);
-				});
-		}
-	}
-
-	if (syncStorage) {
-		syncStorage.get("staticLinks", loadStaticLinks);
+	let staticLinks = localStorage.getItem("staticLinks");
+	if (staticLinks) {
+		jsonDataHandler(staticLinks);
 	} else {
-		loadStaticLinks({"staticLinks": localStorage.getItem("staticLinks")});
+		readFile("links.json",
+			"application/json",
+			file => {
+				responseText = file.responseText;
+				localStorage.setItem("staticLinks", responseText);
+				jsonDataHandler(responseText);
+			});
 	}
+
 
 	// Bind bookmark editing buttons
 	getElemById("quick-links-add").addEventListener("click", e=>{
@@ -289,141 +193,34 @@ document.addEventListener("DOMContentLoaded", function(e) {
 	getElemById("quick-links-del").addEventListener("click", e=>{
 		setBookmarkClickEvent("darkred", delBookmark)});
 
-	// Bind feed editing buttons
-	getElemById("feeds-add").addEventListener("click", e=>{
-		let form = getElemById("feed-form");
-		let top = getElemById("feeds-add").getBoundingClientRect().top + 20;
-		form.style.top = top.toString() + "px";
-		form.style.display = form.style.display != "block" ? "block" : "none";
-	});
-	getElemById("feed-form").addEventListener("submit", e=>{
-		e.preventDefault();
-
-		let inputs = e.target;
-		let name = inputs.querySelector("[name=\"name\"]").value;
-		let url = inputs.querySelector("[name=\"url\"]").value;
-		let regex = inputs.querySelector("[name=\"regex\"]").value;
-		let prefix = inputs.querySelector("[name=\"prefix\"]").value;
-		var arr = [url];
-		if (regex) arr.push(regex);
-		if (prefix) arr.push(prefix);
-
-		if (syncStorage) {
-			syncStorage.get("feeds", result=>{
-				result["feeds"][name] = arr;
-				syncStorage.set({"feeds": result["feeds"]});
-			});
-		} else {
-			let feeds = JSON.parse(localStorage.getItem("feeds"));
-			feeds[name] = arr;
-			localStorage.setItem("feeds", JSON.stringify(feeds));
-		}
-		getElemById("feed-form").style.display = "none";
-	});
-	getElemById("feeds-del").addEventListener("click", event => {
-		const feednames = getElemById("feednames");
-		const ul = feednames.lastChild;
-		ul.textContent = "";
-
-		var delFeed;
-		var populateUl = e => {
-			li = ul.appendChild(document.createElement("li"));
-			li.appendChild(document.createTextNode(e));
-		};
-
-		if (syncStorage) {
-			delFeed = e => {
-				syncStorage.get("feeds", result=>{
-					delete result["feeds"][e.target.textContent];
-					syncStorage.set({"feeds": result["feeds"]});
-				});
-				feednames.style.display = "none";
-			}
-			syncStorage.get("feeds", result=>{for (name in result["feeds"])populateUl(name)});
-		} else {
-			delFeed = e => {
-				let feeds = JSON.parse(localStorage.getItem("feeds"));
-				localQuickLinks.pop(obj);
-				localStorage.setItem("feeds", JSON.stringify(feeds));
-				feednames.style.display = "none";
-			}
-			JSON.parse(localStorage.getItem("feeds")).foreach(populateUl);
-		}
-
-		ul.addEventListener("click", delFeed);
-		feednames.style.display = feednames.style.display != "block" ? "block" : "none";
-	});
-
-
 	// Load notes
-	const noteSection = getElemById("noteSection");
-	noteSection.hidden = !localStorage.getItem("showNotes");
-	getElemById("btn-toggle-notes").innerHTML = noteSection.hidden?"&#x25BD;":"&#x25B3;";
-
-	var notepad = noteSection.children[0];
+	const notepad = getElemById("notepad");
 	notepad.value = localStorage.getItem("localnotes");
-
-	// Load synced notes
-	if (syncStorage) {
-		syncStorage.get(result => {
-			for (var i = noteSection.children.length; i-->1;) {
-				var key = "notes" + i;
-				if (!result[key]) result[key] = localStorage.getItem(key);
-				noteSection.children[i].value = result[key];
-			}
-		});
-	} else {
-		for (var i = noteSection.children.length; i-->1;) {
-			noteSection.children[i].value = localStorage.getItem("notes" + i);
-		}
-	}
+	notepad.hidden = !localStorage.getItem("showNotes");
+	getElemById("btn-toggle-notes").innerHTML = notepad.hidden?"&#x25BD;":"&#x25B3;";
 	
 	// Eventlisteners for notes
 	var saveNotes = ()=>{
-		localStorage.setItem("localnotes", noteSection.children[0].value);
-
-		for (var i = noteSection.children.length; i-->1;) {
-			var key = "notes" + i;
-			var value = noteSection.children[i].value;
-			if (syncStorage !== undefined) {
-				syncStorage.set({[key]: value});
-			} else {
-				localStorage.setItem(key, value);
-			}
-		}
+		localStorage.setItem("localnotes", notepad.value);
 	};
-	var resizeNotes = e=>{
-		noteSection.style.height = "100%";
-		var view = parseInt(sessionStorage.getItem("notesview"));
-
-		if (isNaN(view) || view == 4 || e.altKey) {
-			for (var i = noteSection.children.length; i--;) {
-				noteSection.children[i].hidden = false;
-				noteSection.children[i].style.width = "49%";
-				noteSection.children[i].style.height = "40%";
-			}
-			view = 0;
+	var resizeNotes = ()=>{
+		if (notepad.style.width=="100%") {
+			notepad.style.width = "57%";
+			notepad.style.height = "50%";
 		} else {
-			for (var i = noteSection.children.length; i--;) {
-				if (view != i) noteSection.children[i].hidden = true;
-			}
-			let notepad = noteSection.children[view++];
-			notepad.hidden = false;
 			notepad.style.width = "100%";
 			notepad.style.height = "100%";
 			notepad.scrollIntoView(true);
 		}
-
-		sessionStorage.setItem("notesview", view);
 	};
 	var toggleNotes = ()=>{
-		if (noteSection.hidden){
-			noteSection.hidden = false;
+		if (notepad.hidden){
+			notepad.hidden = false;
 			localStorage.setItem("showNotes", 1);
 			getElemById("btn-toggle-notes").innerHTML = "&#x25B3;";
 
 		}else{
-			noteSection.hidden = true;
+			notepad.hidden = true;
 			localStorage.setItem("showNotes", "");
 			getElemById("btn-toggle-notes").innerHTML = "&#x25BD;";
 		}
@@ -439,11 +236,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
 		}
 		else if (e.altKey && e.key == "q"){
 			e.preventDefault();
-			resizeNotes({altKey:false});
-		}
-		else if (e.altKey && e.key == "w"){
-			e.preventDefault();
-			resizeNotes({altKey:true});
+			resizeNotes();
 		}
 		else if (e.altKey && e.keyCode == 40){
 			e.preventDefault();

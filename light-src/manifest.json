@@ -1,6 +1,6 @@
 {
-  "name": "Custom New Tab",
-  "description": "New tab page with search, links, rss, notes and sync",
+  "name": "Custom New Tab Lite",
+  "description": "New tab page with search, links, notes",
   "version": "1.0",
   "author": "sgp",
   "chrome_url_overrides": {"newtab": "index.html"},
