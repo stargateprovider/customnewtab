@@ -190,8 +190,9 @@ document.addEventListener("DOMContentLoaded", function(e) {
 		otherBookmarksId = "unfiled_____";
 		syncStorage = browser.storage.sync;
 	}
+	//console.log("Using " + (syncStorage ? "synced" : "local") + " storage");
 
-	if (typeof otherBookmarksId !== "undefined"){
+	if (otherBookmarksId !== undefined){
 		// Load links from bookmarks and recently closed
 		chrome.sessions.getRecentlyClosed(appendListToSidebar);
 		chrome.topSites.get(appendListToSidebar);
@@ -205,63 +206,67 @@ document.addEventListener("DOMContentLoaded", function(e) {
 	// Load links and feeds from file
 	var feedsContainer = getElemById("feeds");
 
-	var jsonFileHandler = function(responseText){
-		var data = JSON.parse(responseText);
+	var jsonDataHandler = function(responseText){
+		var staticData = JSON.parse(responseText);
 		let localQuickLinks = JSON.parse(localStorage.getItem("quick-links"));
-		if (localQuickLinks){
+		if (localQuickLinks) {
 			appendToQuickLinks(localQuickLinks);
 		} else {
-			localStorage.setItem("quick-links", JSON.stringify(data.quickLinks));
-			appendToQuickLinks(data.quickLinks);
+			localStorage.setItem("quick-links", JSON.stringify(staticData.quickLinks));
+			appendToQuickLinks(staticData.quickLinks);
 		}
 
-		linksArrayLen = data.slowLinks.length;
+		linksArrayLen = staticData.slowLinks.length;
 		for (let i=0; i < linksArrayLen; i++){
-			appendListToSidebar(data.slowLinks[i], false);
+			appendListToSidebar(staticData.slowLinks[i], false);
 		}
 
 		var feedsToggleHandler = function(){
 			this.removeEventListener("toggle", feedsToggleHandler);
 			var key = "lastcheck";
-			var lastcheck = localStorage.getItem(key);
-			console.log("0"+lastcheck);
-
-			if (syncStorage !== undefined) {
+			var webfeeds = staticData.feeds.Web;
+			var values = {};
+			
+			if (syncStorage) {
 				syncStorage.get([key], result => {
-					if (result[key]) {
-						lastcheck = result[key];
+					values.key = result[key];
+					for(obj in webfeeds){
+						loadFeeds(obj, webfeeds[obj], feedsContainer, result[key]);
 					}
 				});
 				syncStorage.set({[key]: new Date});
+			} else {
+				values.key = localStorage.getItem(key);
+				var lastcheck = localStorage.getItem(key);
+				for(obj in webfeeds){
+					loadFeeds(obj, webfeeds[obj], feedsContainer, lastcheck);
+				}
+				localStorage.setItem(key, new Date);
 			}
-			webfeeds = data.feeds.Web;
-			for(obj in webfeeds){
-				loadFeeds(obj, webfeeds[obj], feedsContainer, lastcheck);
-			}
-			console.log(lastcheck);
+			console.log(values.key);
 		}
 		feedsContainer.addEventListener("toggle", feedsToggleHandler);
 	}
 
-	var loadStaticLinks = result => {
-		if (result["staticLinks"] != null) {
-			jsonFileHandler(result["staticLinks"]);
+	var loadStaticLinks = function(result){
+		if (result["staticLinks"]) {
+			jsonDataHandler(result["staticLinks"]);
 		} else {
 			readFile("links.json",
 				"application/json",
 				file => {
 					responseText = file.responseText;
-					if (syncStorage !== undefined) {
+					if (syncStorage) {
 						syncStorage.set({"staticLinks": responseText});
 					} else {
 						localStorage.setItem("staticLinks", responseText);
 					}
-					jsonFileHandler(responseText);
+					jsonDataHandler(responseText);
 				});
 		}
 	}
 
-	if (syncStorage !== undefined) {
+	if (syncStorage) {
 		syncStorage.get("staticLinks", loadStaticLinks);
 	} else {
 		loadStaticLinks({"staticLinks": localStorage.getItem("staticLinks")});
@@ -291,7 +296,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
 	notepad.value = localStorage.getItem("localnotes");
 
 	// Load synced notes
-	if (syncStorage !== undefined) {
+	if (syncStorage) {
 		syncStorage.get(result => {
 			for (var i = 1; i < noteSection.children.length; i++) {
 				var key = "notes" + i;
@@ -313,7 +318,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
 			var key = "notes" + i;
 			var value = noteSection.children[i].value;
 			if (syncStorage !== undefined) {
-				syncStorage.set({[key]: value}, ()=>{});
+				syncStorage.set({[key]: value});
 			} else {
 				localStorage.setItem(key, value);
 			}
