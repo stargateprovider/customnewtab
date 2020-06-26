@@ -209,10 +209,10 @@ document.addEventListener("DOMContentLoaded", function(e) {
 	}
 
 	// Load links and feeds from file
-	let jsonDataHandler = staticData => {		
-		let localQuickLinks = JSON.parse(localStorage.getItem("quick-links"));
+	let jsonDataHandler = staticData => {
+		let localQuickLinks = localStorage.getItem("quick-links");
 		if (localQuickLinks) {
-			appendToQuickLinks(localQuickLinks);
+			appendToQuickLinks(JSON.parse(localQuickLinks));
 		} else {
 			localStorage.setItem("quick-links", JSON.stringify(staticData.quickLinks));
 			appendToQuickLinks(staticData.quickLinks);
@@ -257,7 +257,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
 				file => {
 					responseText = file.responseText;
 					if (syncStorage) {
-						syncStorage.set({"staticLinks": responseText, "feeds": {}});
+						syncStorage.set({"staticLinks": JSON.parse(responseText), "feeds": {}});
 					} else {
 						localStorage.setItem("staticLinks", responseText);
 						localStorage.setItem("feeds", "{}")
