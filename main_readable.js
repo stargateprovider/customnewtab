@@ -209,9 +209,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
 	}
 
 	// Load links and feeds from file
-	let jsonDataHandler = responseText => {
-		var staticData = JSON.parse(responseText);
-		
+	let jsonDataHandler = staticData => {		
 		let localQuickLinks = JSON.parse(localStorage.getItem("quick-links"));
 		if (localQuickLinks) {
 			appendToQuickLinks(localQuickLinks);
@@ -239,7 +237,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
 				});
 				syncStorage.set({[timeKey]: new Date});
 			} else {
-				const webfeeds = localStorage.getItem("feeds");
+				const webfeeds = JSON.parse(localStorage.getItem("feeds"));
 				const lastcheck = localStorage.getItem(timeKey);
 				for (name in webfeeds) {
 					loadFeed(name, webfeeds[name], feedsContainer, lastcheck);
@@ -262,7 +260,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
 						syncStorage.set({"staticLinks": responseText, "feeds": {}});
 					} else {
 						localStorage.setItem("staticLinks", responseText);
-						localStorage.setItem("feeds", {})
+						localStorage.setItem("feeds", "{}")
 					}
 					jsonDataHandler(responseText);
 				});
@@ -272,7 +270,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
 	if (syncStorage) {
 		syncStorage.get("staticLinks", loadStaticLinks);
 	} else {
-		loadStaticLinks({"staticLinks": localStorage.getItem("staticLinks")});
+		loadStaticLinks({"staticLinks": JSON.parse(localStorage.getItem("staticLinks"))});
 	}
 
 	// Bind bookmark editing buttons
