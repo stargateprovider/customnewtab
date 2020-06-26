@@ -342,7 +342,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
 		} else {
 			delFeed = e => {
 				let feeds = JSON.parse(localStorage.getItem("feeds"));
-				localQuickLinks.pop(obj);
+				feeds.pop(obj);
 				localStorage.setItem("feeds", JSON.stringify(feeds));
 				feednames.style.display = "none";
 			}
