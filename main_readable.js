@@ -256,13 +256,14 @@ document.addEventListener("DOMContentLoaded", function(e) {
 				"application/json",
 				file => {
 					responseText = file.responseText;
+					parsed = JSON.parse(responseText);
 					if (syncStorage) {
-						syncStorage.set({"staticLinks": JSON.parse(responseText), "feeds": {}});
+						syncStorage.set({"staticLinks": parsed, "feeds": {}});
 					} else {
 						localStorage.setItem("staticLinks", responseText);
 						localStorage.setItem("feeds", "{}")
 					}
-					jsonDataHandler(responseText);
+					jsonDataHandler(parsed);
 				});
 		}
 	}

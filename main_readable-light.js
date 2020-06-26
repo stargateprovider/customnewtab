@@ -151,9 +151,9 @@ document.addEventListener("DOMContentLoaded", function(e) {
 	let jsonDataHandler = responseText => {
 		var staticData = JSON.parse(responseText);
 		
-		let localQuickLinks = JSON.parse(localStorage.getItem("quick-links"));
+		let localQuickLinks = localStorage.getItem("quick-links");
 		if (localQuickLinks) {
-			appendToQuickLinks(localQuickLinks);
+			appendToQuickLinks(JSON.parse(localQuickLinks));
 		} else {
 			localStorage.setItem("quick-links", JSON.stringify(staticData.quickLinks));
 			appendToQuickLinks(staticData.quickLinks);
