@@ -338,7 +338,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
 				});
 				feednames.style.display = "none";
 			}
-			syncStorage.get("feeds", result=>{for (name in result["feeds"])populateUl(name)});
+			syncStorage.get("feeds", result=>{for (name in result["feeds"]) populateUl(name)});
 		} else {
 			delFeed = e => {
 				let feeds = JSON.parse(localStorage.getItem("feeds"));
@@ -346,7 +346,8 @@ document.addEventListener("DOMContentLoaded", function(e) {
 				localStorage.setItem("feeds", JSON.stringify(feeds));
 				feednames.style.display = "none";
 			}
-			JSON.parse(localStorage.getItem("feeds")).foreach(populateUl);
+			parsed=JSON.parse(localStorage.getItem("feeds"));
+			for (name in parsed) populateUl(name);
 		}
 
 		ul.addEventListener("click", delFeed);
