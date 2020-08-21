@@ -65,3 +65,94 @@ function fetchWallpaper() {
 
 // Surfing-waves rss
 function f(e){var s,t=document.createElement("iframe"),o=window,r="";for(s=0;s<e.length;s++)r+="rssfeed[url]["+s+"]=https://"+encodeURIComponent(e[s])+"&";t.src="https://feed.surfing-waves.com/php/rssfeed.php?"+r+"&rssfeed[target]=_top&rssfeed[font_size]=12&rssfeed[title]=on&rssfeed[title_name]="+encodeURIComponent(o.rssfeed_title_name)+"&rssfeed[title_bgcolor]=%23363636&rssfeed[title_color]=%23fff&rssfeed[item_title_length]=80&rssfeed[item_title_color]=%23ccc&rssfeed[item_border_bottom]=on&rssfeed[item_date]="+(o.rssfeed_item_date?"on":"")+"&rssfeed[item_description]="+(o.rssfeed_item_description?"on":"")+"&rssfeed[item_description_color]=%23666&rssfeed[cache]="+o.rssfeed_cache,t.scrolling="no",document.getElementById("feeds").appendChild(t)}function loadFeeds(){rssfeed_title_name="eBay: 999, oracle",rssfeed_item_description="on",rssfeed_cache="2cba009caaaa790861cda61a71d6def0",f(["www.ebay.com/sch/i.html?_udhi=40.00&_geositeid=0&_sacat=139973&_nkw=%28persons+hours+doors%2C999%2Cvirtue%29+%283ds%2Cds%29+-tetsudou+-ginga+-amiibo&_dcat=139973&Region%2520Code=%2521%7CNTSC%252DU%252FC%2520%2528US%252FCanada%2529%7CPAL%7CRegion%2520Free&Game%2520Name=%2521%7C999%253A%2520Nine%2520Hours%252C%2520Nine%2520Persons%252C%2520Nine%2520Doors%7CAdventure%7CNine%2520Hours%252C%2520Nine%2520Persons%252C%2520Nine%2520Doors%7CZero%2520Escape%253A%2520Virtue%2527s%2520Last%2520Reward&_fcid=66&_sop=15&_rss=1","www.ebay.co.uk/sch/Video-Games/139973/i.html?_ftrt=901&_sop=15&_dmd=1&_udhi=39&_mPrRngCbx=1&_ipg=200&_ftrv=1&_from=R40&LH_PrefLoc=2&_dcat=139973&_rss=1&_udlo&_nkw=zelda%20oracle&rt=nc&Platform=Nintendo%2520Game%2520Boy|Nintendo%2520Game%2520Boy%2520Color|!"]),rssfeed_title_name="PhoneArena - Phones, Outside, SCP: Secret Laboratory",rssfeed_item_date="on",rssfeed_item_description="",rssfeed_cache="b9aa3a3fb265e7c37ac5c0cb3f1fd89e",f(["www.phonearena.com/feed/new-phones","www.reddit.com/r/outside/.rss","steamcommunity.com/games/700330/rss/"])};
+
+
+
+function getCookie(cname) {
+	var name = cname + "=";
+	var decodedCookie = decodeURIComponent(document.cookie);
+	var c, ca = decodedCookie.split(';');
+	for(var i=0; i<ca.length; i++) {
+		c = ca[i];
+		while (c.charAt(0) == ' ') {
+			c = c.substring(1);
+		}
+		if (c.indexOf(name) == 0) {
+			return c.substring(name.length, c.length);
+		}
+	}
+	return "";
+}
+function setCookie(cname, cvalue, exdays) {
+	var d = new Date();
+	d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+	var expires = "expires="+d.toUTCString();
+	document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+}
+
+
+function includeHTML() {
+	var z, i, elmnt, file, xhttp;
+	/* Loop through a collection of all HTML elements: */
+	z = document.getElementsByTagName("*");
+	for (i = 0; i < z.length; i++) {
+		elmnt = z[i];
+		/*search for elements with a certain atrribute:*/
+		file = elmnt.getAttribute("w3-include-html");
+		if (file) {
+			/* Make an HTTP request using the attribute value as the file name: */
+			xhttp = new XMLHttpRequest();
+			xhttp.onreadystatechange = function() {
+				if (this.readyState == 4) {
+					if (this.status == 200) {elmnt.innerHTML += this.responseText;}
+					if (this.status == 404) {elmnt.innerHTML += " imported page not found.";}
+					/* Remove the attribute, and call this function once more: */
+					elmnt.removeAttribute("w3-include-html");
+					includeHTML();
+				}
+			}
+			xhttp.open("GET", file, true);
+			xhttp.send();
+			/* Exit the function: */
+			return;
+		}
+	}
+}
+
+
+// Sama hea, mis fetch().then()
+function readFile(file, type, callback) {
+	const rawFile = new XMLHttpRequest();
+	rawFile.overrideMimeType(type);
+	rawFile.open("GET", file, true);
+	rawFile.onload = function() {
+		if (rawFile.readyState === 4 && rawFile.status == "200") {
+			callback(rawFile);
+		}
+	}
+	rawFile.send(null);
+}
+
+
+// Vana kaval lahendus submiti jaoks
+var searchForm = getElemById("searchForm");
+var searchbar = searchForm.children[0];
+searchForm.addEventListener("click", function(e){
+	if (e.target.name){
+		let parameters = e.target.name.split("&");
+		for (var j=0; j<parameters.length-1; j++){
+
+			let pair = parameters[j].split("=");
+			let input = document.createElement("input");
+			input.setAttribute("type", "hidden");
+			input.setAttribute("name", pair[0]);
+			input.setAttribute("value", pair[1]);
+			searchForm.appendChild(input);
+		}
+		console.log(parameters)
+		searchbar.name = parameters[j];
+	}else{
+		searchbar.name = "q";
+	}
+	searchForm.target = e.ctrlKey ? "_blank" : "_self";
+});

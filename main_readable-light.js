@@ -1,17 +1,7 @@
-var quickLinksURLs = [];
-var bookmarkColor = "#333"
-
-function readFile(file, type, callback) {
-	const rawFile = new XMLHttpRequest();
-	rawFile.overrideMimeType(type);
-	rawFile.open("GET", file, true);
-	rawFile.onload = function() {
-		if (rawFile.readyState === 4 && rawFile.status == "200") {
-			callback(rawFile);
-		}
-	}
-	rawFile.send(null);
-}
+const newElem = e=>newElem(e),
+	  getElemById = id=>getElemById(id);
+var quickLinksURLs = [],
+	bookmarkColor = "#333";
 
 function fetchFavicon(url) {
 	if (/^(edge|file)/.test(url)) {
@@ -25,23 +15,21 @@ function fetchFavicon(url) {
 }
 
 function appendToQuickLinks(links) {
-	var quicklinks = document.getElementById('quick-links');
+	var quicklinks = getElemById('quick-links');
 
 	for (var i=0; i < links.length; i++) {
-		var div = document.createElement("div");
+		var div = newElem("div");
 		div.className = "bookmark";
-		var a = div.appendChild(document.createElement("a"));
+		var a = div.appendChild(newElem("a"));
 		a.href = links[i].url;
 		a.style.background = 'url(' +links[i].favIconUrl+ ') no-repeat center center';
 		a.title = links[i].url;
 
-		quicklinks.appendChild(div);
+		quicklinks.append(div);
 		quickLinksURLs.push(links[i].url);
 	}
 }
 function appendListToSidebar(links) {
-	const newElem = document.createElement.bind(document)
-	const container = document.getElementById("sidebar");
 	var ul = newElem("ul");
 
 	nQuickLinks = quickLinksURLs.length;
@@ -50,7 +38,7 @@ function appendListToSidebar(links) {
 		if (!link.hasOwnProperty("url") || link.url.startsWith("chrome.//")){
 			continue;
 		}
-		var linkIsIn = link.url.includes.bind(link.url);
+		var linkIsIn = str=>link.url.includes(str);
 		for (var j=0; j<nQuickLinks; j++){
 			if (linkIsIn(quickLinksURLs[j])) {continue;}
 		}
@@ -58,21 +46,21 @@ function appendListToSidebar(links) {
 		//var li = ;
 		var a = ul.appendChild(newElem("li")).appendChild(newElem("a"));
 		a.href = link.url;
-		a.appendChild(document.createTextNode(link.title));
+		a.append(link.title);
 
 		var icon = new Image();
 		icon.src = link.favIconUrl ? link.favIconUrl : fetchFavicon(link.url);
 		a.insertAdjacentElement("afterbegin", icon);
 	}
-	container.appendChild(ul);
+	getElemById("sidebar").append(ul);
 }
 
 function addBookmark(event){
 	event.preventDefault();
 
-	let inputs = event.target;
-	let a1 = document.createElement("a");
-	let a2 = document.createElement("a");
+	let inputs = event.target,
+		a1 = newElem("a");
+		a2 = newElem("a");
 	// Converts:
 	a1.href = inputs.querySelector("[placeholder=\"URL\"]").value;
 	a2.href = inputs.querySelector("[placeholder=\"Ikooni URL\"]").value;
@@ -86,7 +74,7 @@ function addBookmark(event){
 }
 function moveBookmark(event){
 	event.preventDefault();
-	let container = document.getElementById("quick-links");
+	let container = getElemById("quick-links");
 	let bookmarks = container.childNodes;
 	for (var i=0; bookmarks[++i] != event.currentTarget;);
 
@@ -101,7 +89,7 @@ function moveBookmark(event){
 }
 function delBookmark(event){
 	event.preventDefault();
-	let container = document.getElementById("quick-links");
+	let container = getElemById("quick-links");
 	let bookmarks = container.childNodes;
 	for (var i=0; bookmarks[++i] != event.currentTarget;);
 	container.removeChild(bookmarks[i]);
@@ -125,8 +113,6 @@ function setBookmarkClickEvent(bg, func=undefined){
 
 
 document.addEventListener("DOMContentLoaded", function(e) {
-	const getElemById = document.getElementById.bind(document);
-
 	// Determine if we are local
 	var otherBookmarksId;
 	if (window.location.origin.startsWith("chrome-extension://")){
@@ -148,9 +134,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
 	}
 
 	// Load links from file
-	let jsonDataHandler = responseText => {
-		var staticData = JSON.parse(responseText);
-		
+	let jsonDataHandler = staticData => {
 		let localQuickLinks = localStorage.getItem("quick-links");
 		if (localQuickLinks) {
 			appendToQuickLinks(JSON.parse(localQuickLinks));
@@ -167,15 +151,14 @@ document.addEventListener("DOMContentLoaded", function(e) {
 
 	let staticLinks = localStorage.getItem("staticLinks");
 	if (staticLinks) {
-		jsonDataHandler(staticLinks);
+		jsonDataHandler(JSON.parse(staticLinks));
 	} else {
-		readFile("links.json",
-			"application/json",
-			file => {
-				responseText = file.responseText;
-				localStorage.setItem("staticLinks", responseText);
-				jsonDataHandler(responseText);
-			});
+		fetch("links.json")
+		.then(response => response.json())
+		.then(json => {
+			localStorage.setItem("staticLinks", json.stringify());
+			jsonDataHandler(json);
+		});
 	}
 
 
@@ -198,7 +181,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
 	notepad.value = localStorage.getItem("localnotes");
 	notepad.hidden = !localStorage.getItem("showNotes");
 	getElemById("btn-toggle-notes").innerHTML = notepad.hidden?"&#x25BD;":"&#x25B3;";
-	
+
 	// Eventlisteners for notes
 	var saveNotes = ()=>{
 		localStorage.setItem("localnotes", notepad.value);
@@ -244,41 +227,29 @@ document.addEventListener("DOMContentLoaded", function(e) {
 		}
 	});
 
-	// Eventlistener for searchForm
-	var searchForm = getElemById("searchForm");
-	var searchbar = searchForm.children[0];
-	searchForm.addEventListener("click", function(e){
-		if (e.target.name){
-			let parameters = e.target.name.split("&");
-			for (var j=0; j<parameters.length-1; j++){
-
-				let pair = parameters[j].split("=");
-				let input = document.createElement("input");
-				input.setAttribute("type", "hidden");
-				input.setAttribute("name", pair[0]);
-				input.setAttribute("value", pair[1]);
-				searchForm.appendChild(input);
-			}
-			searchbar.name = parameters[j];
-		}else{
-			searchbar.name = "q";
-		}
-		searchForm.target = e.ctrlKey ? "_blank" : "_self";
-	});
-
 	// Eventlistener for sidebar
 	var sidebar = getElemById("sidebar");
 	document.addEventListener("mousemove", e => {
 		if (e.altKey){
 			return;
 		}
-		let visible = sidebar.style.display;
-		let sw = sidebar.offsetWidth;
-		let ww = window.innerWidth;
-		let mx = e.clientX;
+		let visible = sidebar.style.display,
+			sw = sidebar.offsetWidth,
+			ww = window.innerWidth,
+			mx = e.clientX;
 		sidebar.style.display = e.clientY>5 && (ww-mx<20 || (visible && ww-sw-mx<0)) ? "flex" : "none";
 	});
 
+	// Eventlistener for searchForm
+	var searchForm = getElemById("searchForm"),
+		searchbar = searchForm.children[0];
+	searchForm.addEventListener("click", e => {
+		if(e.target.hasAttribute("formaction")){
+			e.preventDefault();
+			let url = e.target.getAttribute("formaction").replace("%s", searchbar.value);
+			window.open(url, e.ctrlKey ? "_blank" : "_self");
+		}
+	});
 	// Focus on searchbar. Doesn't work in add-on form, which is intended
 	searchbar.focus();
 });

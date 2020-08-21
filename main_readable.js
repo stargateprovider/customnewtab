@@ -1,35 +1,24 @@
-const REGEX_DEFAULT = "item>\\s*<title>(?<name>.+?)</title>[\\s\\S]*?<link>(?:<!\\[CDATA\\[)?(?<link>.+?)(?:\\]\\]>)?<[\\s\\S]+?pubDate>(?<date>.+?)<[\\s\\S]+?(?<desc><description>[\\s\\S]+?</description>)";
+const REGEX_DEFAULT = "item>\\s*<title>(?<name>.+?)</title>[\\s\\S]*?<link>(?:<!\\[CDATA\\[)?(?<link>.+?)(?:\\]\\]>)?<[\\s\\S]+?pubDate>(?<date>.+?)<[\\s\\S]+?(?<desc><description>[\\s\\S]+?</description>)",
+	  newElem = e=>document.createElement(e),
+	  getElemById = id=>document.getElementById(id);
 var quickLinksURLs = [];
-var bookmarkColor = "#333"
-
-function readFile(file, type, callback) {
-	const rawFile = new XMLHttpRequest();
-	rawFile.overrideMimeType(type);
-	rawFile.open("GET", file, true);
-	rawFile.onload = function() {
-		if (rawFile.readyState === 4 && rawFile.status == "200") {
-			callback(rawFile);
-		}
-	}
-	rawFile.send(null);
-}
+var bookmarkColor = "#333";
 
 function loadFeed(name, dataArray, container, lastcheck){
 	var [url, regexStr, prefix] = dataArray;
-	var prefix = prefix ? prefix : "";
+	prefix = prefix ? prefix : "";
 	const parser = new DOMParser();
 
-	const newElem = document.createElement.bind(document);
 	var details = newElem("details");
 	let summary = details.appendChild(newElem("summary"));
-	summary.appendChild(document.createTextNode(name));
+	summary.append(name);
 
-	let processFeed = function(file) {
+	let processFeed = function(resp) {
 		if (!regexStr){
 			regexStr = REGEX_DEFAULT;
 		}
-		var data = file.responseText.matchAll(new RegExp(regexStr, "g"));
-		
+		var data = resp.matchAll(new RegExp(regexStr, "g"));
+
 		var ul = newElem("ul");
 		var a, li, textarea, newEntry, match, matchGroup, doc, i = 0, newEntry = false;
 		while (!(match = data.next()).done && i++ < 30) {
@@ -39,36 +28,36 @@ function loadFeed(name, dataArray, container, lastcheck){
 			a = li.appendChild(newElem("a"));
 			a.className = "tooltipBox";
 			a.href = parser.parseFromString(prefix+matchGroup.link, "text/html").documentElement.textContent;
-			a.appendChild(document.createTextNode(parser.parseFromString(matchGroup.name, "text/html").documentElement.textContent));
+			a.append(parser.parseFromString(matchGroup.name, "text/html").documentElement.textContent);
 
 			textarea = a.appendChild(newElem("textarea"));
 			textarea.className = "tooltipText";
 			textarea.setAttribute("readonly", "true");
-			textarea.appendChild(document.createTextNode(matchGroup.date));
+			textarea.append(matchGroup.date);
 			if (matchGroup["desc"]){
 				doc = parser.parseFromString(matchGroup.desc, "text/html");
 				doc = parser.parseFromString(doc.documentElement.textContent.trim(), "text/html");
-				textarea.appendChild(document.createTextNode("\n\n"+doc.documentElement.textContent));
+				textarea.append("\n\n"+doc.documentElement.textContent);
 			}
 
-			if (!lastcheck || new Date(matchGroup.date) >= lastcheck){
+			if (!lastcheck || new Date(matchGroup.date) >= new Date(lastcheck)){
 				a.style.color = "cyan";
 				newEntry = true;
 			}
 		}
 
 		if (newEntry){
-			details.appendChild(ul);
-			container.appendChild(details);
+			details.append(ul);
+			container.append(details);
 		}
 	}
 
 	if (Array.isArray(url)){
 		for (i=url.length; i--;){
-			readFile(url[i], "text/xml", processFeed);
+			fetch(url[i]).then(resp=>resp.text()).then(processFeed);
 		}
 	} else {
-		readFile(url, "text/xml", processFeed);
+		fetch(url).then(resp=>resp.text()).then(processFeed);
 	}
 }
 
@@ -84,32 +73,30 @@ function fetchFavicon(url) {
 }
 
 function appendToQuickLinks(links) {
-	var quicklinks = document.getElementById('quick-links');
+	var quicklinks = getElemById('quick-links');
 
 	for (var i=0; i < links.length; i++) {
-		var div = document.createElement("div");
+		var div = newElem("div");
 		div.className = "bookmark";
-		var a = div.appendChild(document.createElement("a"));
+		var a = div.appendChild(newElem("a"));
 		a.href = links[i].url;
 		a.style.background = 'url(' +links[i].favIconUrl+ ') no-repeat center center';
 		a.title = links[i].url;
 
-		quicklinks.appendChild(div);
+		quicklinks.append(div);
 		quickLinksURLs.push(links[i].url);
 	}
 }
 function appendListToSidebar(links) {
-	const newElem = document.createElement.bind(document)
-	const container = document.getElementById("sidebar");
 	var ul = newElem("ul");
-
 	nQuickLinks = quickLinksURLs.length;
+
 	for (var i=0; i < links.length; i++) {
 		var link = links[i].hasOwnProperty("tab") ? links[i].tab : links[i];
 		if (!link.hasOwnProperty("url") || link.url.startsWith("chrome.//")){
 			continue;
 		}
-		var linkIsIn = link.url.includes.bind(link.url);
+		var linkIsIn = str=>link.url.includes(str);
 		for (var j=0; j<nQuickLinks; j++){
 			if (linkIsIn(quickLinksURLs[j])) {continue;}
 		}
@@ -117,21 +104,21 @@ function appendListToSidebar(links) {
 		//var li = ;
 		var a = ul.appendChild(newElem("li")).appendChild(newElem("a"));
 		a.href = link.url;
-		a.appendChild(document.createTextNode(link.title));
+		a.append(link.title);
 
 		var icon = new Image();
 		icon.src = link.favIconUrl ? link.favIconUrl : fetchFavicon(link.url);
 		a.insertAdjacentElement("afterbegin", icon);
 	}
-	container.appendChild(ul);
+	getElemById("sidebar").append(ul);
 }
 
 function addBookmark(event){
 	event.preventDefault();
 
-	let inputs = event.target;
-	let a1 = document.createElement("a");
-	let a2 = document.createElement("a");
+	let inputs = event.target,
+		a1 = newElem("a"),
+		a2 = newElem("a");
 	// Converts:
 	a1.href = inputs.querySelector("[placeholder=\"URL\"]").value;
 	a2.href = inputs.querySelector("[placeholder=\"Ikooni URL\"]").value;
@@ -145,7 +132,7 @@ function addBookmark(event){
 }
 function moveBookmark(event){
 	event.preventDefault();
-	let container = document.getElementById("quick-links");
+	let container = getElemById("quick-links");
 	let bookmarks = container.childNodes;
 	for (var i=0; bookmarks[++i] != event.currentTarget;);
 
@@ -160,7 +147,7 @@ function moveBookmark(event){
 }
 function delBookmark(event){
 	event.preventDefault();
-	let container = document.getElementById("quick-links");
+	let container = getElemById("quick-links");
 	let bookmarks = container.childNodes;
 	for (var i=0; bookmarks[++i] != event.currentTarget;);
 	container.removeChild(bookmarks[i]);
@@ -184,8 +171,6 @@ function setBookmarkClickEvent(bg, func=undefined){
 
 
 document.addEventListener("DOMContentLoaded", function(e) {
-	const getElemById = document.getElementById.bind(document);
-
 	// Determine if we are local
 	var otherBookmarksId, syncStorage;
 	if (window.location.origin.startsWith("chrome-extension://")){
@@ -228,21 +213,21 @@ document.addEventListener("DOMContentLoaded", function(e) {
 		var feedsToggleHandler = ()=>{
 			this.removeEventListener("toggle", feedsToggleHandler);
 			const timeKey = "lastcheck"; //Key to Time
-			
+
 			if (syncStorage) {
 				syncStorage.get([timeKey, "feeds"], result => {
 					for (name in result["feeds"]) {
 						loadFeed(name, result["feeds"][name], feedsContainer, result[timeKey]);
 					}
 				});
-				syncStorage.set({[timeKey]: new Date});
+				syncStorage.set({[timeKey]: (new Date).toString()});
 			} else {
 				const webfeeds = JSON.parse(localStorage.getItem("feeds"));
 				const lastcheck = localStorage.getItem(timeKey);
 				for (name in webfeeds) {
 					loadFeed(name, webfeeds[name], feedsContainer, lastcheck);
 				}
-				localStorage.setItem(timeKey, new Date);
+				localStorage.setItem(timeKey, (new Date).toString());
 			}
 		}
 		feedsContainer.addEventListener("toggle", feedsToggleHandler);
@@ -252,19 +237,17 @@ document.addEventListener("DOMContentLoaded", function(e) {
 		if (result["staticLinks"]) {
 			jsonDataHandler(result["staticLinks"]);
 		} else {
-			readFile("links.json",
-				"application/json",
-				file => {
-					responseText = file.responseText;
-					parsed = JSON.parse(responseText);
-					if (syncStorage) {
-						syncStorage.set({"staticLinks": parsed, "feeds": {}});
-					} else {
-						localStorage.setItem("staticLinks", responseText);
-						localStorage.setItem("feeds", "{}")
-					}
-					jsonDataHandler(parsed);
-				});
+			fetch("links.json")
+			.then(response => response.json())
+			.then(json => {
+				if (syncStorage) {
+					syncStorage.set({"staticLinks": json, "feeds": {}});
+				} else {
+					localStorage.setItem("staticLinks", json.stringify());
+					localStorage.setItem("feeds", "{}")
+				}
+				jsonDataHandler(json);
+			});
 		}
 	}
 
@@ -298,11 +281,11 @@ document.addEventListener("DOMContentLoaded", function(e) {
 	getElemById("feed-form").addEventListener("submit", e=>{
 		e.preventDefault();
 
-		let inputs = e.target;
-		let name = inputs.querySelector("[name=\"name\"]").value;
-		let url = inputs.querySelector("[name=\"url\"]").value;
-		let regex = inputs.querySelector("[name=\"regex\"]").value;
-		let prefix = inputs.querySelector("[name=\"prefix\"]").value;
+		let inputs = e.target,
+			name = inputs.querySelector("[name=\"name\"]").value,
+			url = inputs.querySelector("[name=\"url\"]").value,
+			regex = inputs.querySelector("[name=\"regex\"]").value,
+			prefix = inputs.querySelector("[name=\"prefix\"]").value;
 		var arr = [url];
 		if (regex) arr.push(regex);
 		if (prefix) arr.push(prefix);
@@ -320,14 +303,14 @@ document.addEventListener("DOMContentLoaded", function(e) {
 		getElemById("feed-form").style.display = "none";
 	});
 	getElemById("feeds-del").addEventListener("click", event => {
-		const feednames = getElemById("feednames");
-		const ul = feednames.lastChild;
+		const feednames = getElemById("feednames"),
+			  ul = feednames.lastChild;
 		ul.textContent = "";
 
 		var delFeed;
 		var populateUl = e => {
-			li = ul.appendChild(document.createElement("li"));
-			li.appendChild(document.createTextNode(e));
+			li = ul.appendChild(newElem("li"));
+			li.append(e);
 		};
 
 		if (syncStorage) {
@@ -377,7 +360,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
 			noteSection.children[i].value = localStorage.getItem("notes" + i);
 		}
 	}
-	
+
 	// Eventlisteners for notes
 	var saveNotes = ()=>{
 		localStorage.setItem("localnotes", noteSection.children[0].value);
@@ -451,41 +434,33 @@ document.addEventListener("DOMContentLoaded", function(e) {
 		}
 	});
 
-	// Eventlistener for searchForm
-	var searchForm = getElemById("searchForm");
-	var searchbar = searchForm.children[0];
-	searchForm.addEventListener("click", function(e){
-		if (e.target.name){
-			let parameters = e.target.name.split("&");
-			for (var j=0; j<parameters.length-1; j++){
-
-				let pair = parameters[j].split("=");
-				let input = document.createElement("input");
-				input.setAttribute("type", "hidden");
-				input.setAttribute("name", pair[0]);
-				input.setAttribute("value", pair[1]);
-				searchForm.appendChild(input);
-			}
-			searchbar.name = parameters[j];
-		}else{
-			searchbar.name = "q";
-		}
-		searchForm.target = e.ctrlKey ? "_blank" : "_self";
-	});
-
 	// Eventlistener for sidebar
 	var sidebar = getElemById("sidebar");
 	document.addEventListener("mousemove", e => {
 		if (e.altKey){
 			return;
 		}
-		let visible = sidebar.style.display;
-		let sw = sidebar.offsetWidth;
-		let ww = window.innerWidth;
-		let mx = e.clientX;
+		let visible = sidebar.style.display,
+			sw = sidebar.offsetWidth,
+			ww = window.innerWidth,
+			mx = e.clientX;
 		sidebar.style.display = e.clientY>5 && (ww-mx<20 || (visible && ww-sw-mx<0)) ? "flex" : "none";
 	});
 
+	// Eventlistener for searchForm
+	var searchForm = getElemById("searchForm"),
+		searchbar = searchForm.children[0];
+	searchForm.addEventListener("click", e => {
+		if(e.target.hasAttribute("formaction")){
+			e.preventDefault();
+			let url = e.target.getAttribute("formaction").replace("%s", searchbar.value);
+			if (e.shiftKey && chrome.windows) {
+				chrome.windows.create({"url": url, "incognito": true});
+			} else {
+				window.open(url, e.ctrlKey ? "_blank" : "_self");
+			}
+		}
+	});
 	// Focus on searchbar. Doesn't work in add-on form, which is intended
 	searchbar.focus();
 });

@@ -15,26 +15,31 @@ To convert from bookmarks.html (using Sublime Text replace function):
 
 <form id="searchForm" enctype="text/plain">
 	<input type="search" name="q" autofocus/><br />
-	&#x1F50D; >> <input type="image" src="https://www.google.com/favicon.ico" formaction="https://www.google.ee/search"/
-	><input type="image" src="https://duckduckgo.com/favicon.ico" formaction="https://duckduckgo.com/"/
-	><input type="image" src="https://www.google.com/images/branding/product/ico/maps_32dp.ico" formaction="https://www.google.ee/maps"/
-	><input type="image" src="https://s.ytimg.com/yts/img/favicon_32-vflOogEID.png" formaction="https://www.youtube.com/results"/
-	><input type="image" src="https://www.hinnavaatlus.ee/favicon.ico" formaction="https://www.hinnavaatlus.ee/search/" name="query"/
-	><input type="image" src="https://www.ebay.co.uk/favicon.ico" formaction="https://www.ebay.co.uk/sch/i.html" name="_sop=15&_nkw"/
-	><input type="image" src="https://www.wolframalpha.com/_next/static/images/favicon_fzx75d1e.ico" formaction="https://www.wolframalpha.com/input/" name="i"/>
-	| <input type="image" src="animato.ico" formaction="http://enet.animato.ee/index.php" name="otsida"/
-	><input type="image" src="https://www.eki.ee/favicon.ico" formaction="https://www.eki.ee/dict/ies/index.cgi" name="Q"/>IES
-	<input type="image" src="https://www.eki.ee/favicon.ico" formaction="https://www.eki.ee/dict/sys/index.cgi" name="Q"/>SYS
-	<input type="image" src="https://www.eki.ee/favicon.ico" formaction="https://www.eki.ee/dict/ekss/index.cgi" name="Q"/>EKS
-	<input type="image" src="https://www.dictionary.com/hp-assets/dcom_favicon-1bff2f1b49c077ed504e55c3649f2a4b.png" formaction="https://www.dictionary.com/" name="override_query"/
-	><input type="image" src="https://www.thesaurus.com/hp-assets/tcom_favicon-54545f5303fccb956af394ac10f1655d.png" formaction="https://www.thesaurus.com/" name="override_query"/>
-	| <input type="image" src="https://www.processlibrary.com/favicon.ico" formaction="https://www.processlibrary.com/en/search"/
-	><input type="image" src="https://docs.python.org/favicon.ico" formaction="https://docs.python.org/3/search.html"/
-	><input type="image" src="https://docs.djangoproject.com/favicon.ico" formaction="https://docs.djangoproject.com/en/2.2/search/"/
-	><input type="image" src="https://en.cppreference.com/favicon.ico" formaction="https://en.cppreference.com/w/" name="search"/>
-	| <input type="image" src="https://www.goodreads.com/favicon.ico" formaction="https://www.goodreads.com/search"/
-	><input type="image" src="https://www.ester.ee/screens/favicon.ico" formaction="https://www.ester.ee/search~S1*est/X" name="SEARCH"/
-	><input type="image" src="baas.gif" formaction="http://baas.ulme.ee/" name="checks[]=autorChk&checks[]=teosChk&otsing"/>
+	&#x1F50D; >> <input type="image" src="https://www.google.com/favicon.ico" formaction="https://www.google.ee/search?q=%s"/
+	><input type="image" src="https://duckduckgo.com/favicon.ico" formaction="https://duckduckgo.com/?q=%s"/
+	><input type="image" src="https://www.google.com/images/branding/product/ico/maps_32dp.ico" formaction="https://www.google.ee/maps?q=%s"/
+	><input type="image" src="https://s.ytimg.com/yts/img/favicon_32-vflOogEID.png" formaction="https://www.youtube.com/results?q=%s"/
+	><input type="image" src="https://www.wolframalpha.com/_next/static/images/favicon_fzx75d1e.ico" formaction="https://www.wolframalpha.com/input/?i=%s"/>
+	| <input type="image" src="https://www.rimi.ee/epood/favicon-32x32.png" formaction="https://www.rimi.ee/epood/ee/otsing?query=%s"/
+	><input type="image" src="https://www.selver.ee/skin/frontend/carbon/selver/images/favicon/favicon-32x32.png" formaction="https://www.selver.ee/catalogsearch/result/index/?q=%s"/
+	><input type="image" src="http://www.maxima.ee/favicon.ico" formaction="https://barbora.ee/otsing?q=%s"/
+	><input type="image" src="https://www.prismamarket.ee/images/custom/ee/favicon.ico?r=a4b8e5f11209be46b787acde7b950f5cb6687d4a-HEAD" formaction="https://www.prismamarket.ee/products/search/%s"/
+	><input type="image" src="https://www.coop.ee/s3fs-public/favicon.ico?IufByiQXA.HZ.gCP1zzkv.tAKoZH6RXA" formaction="https://ecoop.ee/et/otsing/?otsing=%s"/
+	><input type="image" src="https://www.hinnavaatlus.ee/favicon.ico" formaction="https://www.hinnavaatlus.ee/search/?query=%s"/
+	><input type="image" src="https://www.ebay.co.uk/favicon.ico" formaction="https://www.ebay.co.uk/sch/i.html?_sop=15&_nkw=%s"/>
+	| <input type="image" src="animato.ico" formaction="http://enet.animato.ee/index.php?otsida=%s"/
+	><input type="image" src="https://www.eki.ee/favicon.ico" formaction="https://www.eki.ee/dict/ies/index.cgi?Q=%s"/>IES
+	<input type="image" src="https://www.eki.ee/favicon.ico" formaction="https://www.eki.ee/dict/sys/index.cgi?Q=%s"/>SYS
+	<input type="image" src="https://www.eki.ee/favicon.ico" formaction="https://www.eki.ee/dict/ekss/index.cgi?Q=%s"/>EKS
+	<input type="image" src="https://www.dictionary.com/hp-assets/dcom_favicon-1bff2f1b49c077ed504e55c3649f2a4b.png" formaction="https://www.dictionary.com/?override_query=%s"/
+	><input type="image" src="https://www.thesaurus.com/hp-assets/tcom_favicon-54545f5303fccb956af394ac10f1655d.png" formaction="https://www.thesaurus.com/?override_query=%s"/>
+	| <input type="image" src="https://www.processlibrary.com/favicon.ico" formaction="https://www.processlibrary.com/en/search?q=%s"/
+	><input type="image" src="https://docs.python.org/favicon.ico" formaction="https://docs.python.org/3/search.html?q=%s"/
+	><input type="image" src="https://docs.djangoproject.com/favicon.ico" formaction="https://docs.djangoproject.com/en/2.2/search/?q=%s"/
+	><input type="image" src="https://en.cppreference.com/favicon.ico" formaction="https://en.cppreference.com/w/?search=%s"/>
+	| <input type="image" src="https://www.goodreads.com/favicon.ico" formaction="https://www.goodreads.com/search?q=%s"/
+	><input type="image" src="https://www.ester.ee/screens/favicon.ico" formaction="https://www.ester.ee/search~S1*est/X?SEARCH=%s"/
+	><input type="image" src="baas.gif" formaction="http://baas.ulme.ee/?checks[]=autorChk&checks[]=teosChk&otsing=%s"/>
 	<!--input type="image" src="/favicon.ico" formaction="" name=""/-->
 </form>
 
