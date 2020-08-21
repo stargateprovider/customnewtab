@@ -7,7 +7,7 @@ function fetchFavicon(url) {
 	if (/^(edge|file)/.test(url)) {
 		return "";
 	}
-	slashIndex = url.slice(8).indexOf('/');
+	var slashIndex = url.slice(8).indexOf('/');
 	if (slashIndex > -1) {
 		url = url.slice(0, slashIndex + 9);
 	}
@@ -83,7 +83,7 @@ function moveBookmark(event){
 		container.insertBefore(removed, bookmarks[i-1]);
 
 		let localQuickLinks = JSON.parse(localStorage.getItem("quick-links"));
-		[localQuickLinks[i-1], localQuickLinks[i-2]] = [localQuickLinks[i-2], localQuickLinks[i-1]]
+		[localQuickLinks[i-1], localQuickLinks[i-2]] = [localQuickLinks[i-2], localQuickLinks[i-1]];
 		localStorage.setItem("quick-links", JSON.stringify(localQuickLinks));
 	}
 }

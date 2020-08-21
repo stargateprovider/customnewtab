@@ -2,7 +2,8 @@ const REGEX_DEFAULT = "item>\\s*<title>(?<name>.+?)</title>[\\s\\S]*?<link>(?:<!
 	  newElem = e=>document.createElement(e),
 	  getElemById = id=>document.getElementById(id);
 var quickLinksURLs = [];
-var bookmarkColor = "#333";
+	bookmarkColor = "#333",
+	incognitoId = null;
 
 function loadFeed(name, dataArray, container, lastcheck){
 	var [url, regexStr, prefix] = dataArray;
@@ -20,7 +21,7 @@ function loadFeed(name, dataArray, container, lastcheck){
 		var data = resp.matchAll(new RegExp(regexStr, "g"));
 
 		var ul = newElem("ul");
-		var a, li, textarea, newEntry, match, matchGroup, doc, i = 0, newEntry = false;
+		var a, li, textarea, match, matchGroup, doc, i = 0, newEntry = false;
 		while (!(match = data.next()).done && i++ < 30) {
 			matchGroup = match.value.groups;
 
@@ -50,7 +51,7 @@ function loadFeed(name, dataArray, container, lastcheck){
 			details.append(ul);
 			container.append(details);
 		}
-	}
+	};
 
 	if (Array.isArray(url)){
 		for (i=url.length; i--;){
@@ -65,7 +66,7 @@ function fetchFavicon(url) {
 	if (/^(edge|file)/.test(url)) {
 		return "";
 	}
-	slashIndex = url.slice(8).indexOf('/');
+	var slashIndex = url.slice(8).indexOf('/');
 	if (slashIndex > -1) {
 		url = url.slice(0, slashIndex + 9);
 	}
@@ -141,7 +142,7 @@ function moveBookmark(event){
 		container.insertBefore(removed, bookmarks[i-1]);
 
 		let localQuickLinks = JSON.parse(localStorage.getItem("quick-links"));
-		[localQuickLinks[i-1], localQuickLinks[i-2]] = [localQuickLinks[i-2], localQuickLinks[i-1]]
+		[localQuickLinks[i-1], localQuickLinks[i-2]] = [localQuickLinks[i-2], localQuickLinks[i-1]];
 		localStorage.setItem("quick-links", JSON.stringify(localQuickLinks));
 	}
 }
@@ -216,7 +217,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
 
 			if (syncStorage) {
 				syncStorage.get([timeKey, "feeds"], result => {
-					for (name in result["feeds"]) {
+					for (var name in result["feeds"]) {
 						loadFeed(name, result["feeds"][name], feedsContainer, result[timeKey]);
 					}
 				});
@@ -224,7 +225,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
 			} else {
 				const webfeeds = JSON.parse(localStorage.getItem("feeds"));
 				const lastcheck = localStorage.getItem(timeKey);
-				for (name in webfeeds) {
+				for (var name in webfeeds) {
 					loadFeed(name, webfeeds[name], feedsContainer, lastcheck);
 				}
 				localStorage.setItem(timeKey, (new Date).toString());
@@ -244,7 +245,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
 					syncStorage.set({"staticLinks": json, "feeds": {}});
 				} else {
 					localStorage.setItem("staticLinks", json.stringify());
-					localStorage.setItem("feeds", "{}")
+					localStorage.setItem("feeds", "{}");
 				}
 				jsonDataHandler(json);
 			});
@@ -451,11 +452,20 @@ document.addEventListener("DOMContentLoaded", function(e) {
 	var searchForm = getElemById("searchForm"),
 		searchbar = searchForm.children[0];
 	searchForm.addEventListener("click", e => {
-		if(e.target.hasAttribute("formaction")){
+		if (e.target.hasAttribute("formaction")) {
 			e.preventDefault();
 			let url = e.target.getAttribute("formaction").replace("%s", searchbar.value);
 			if (e.shiftKey && chrome.windows) {
-				chrome.windows.create({"url": url, "incognito": true});
+				var newWindow = ()=>chrome.windows.create({url: url, incognito: true}, w => {incognitoId = w.id;});
+				if (incognitoId) {
+					chrome.tabs.create({url: url, windowId: incognitoId}, e => {
+						if (chrome.runtime.lastError) {
+							incognitoId = null;
+							newWindow();
+					}});
+				} else {
+					newWindow();
+				}
 			} else {
 				window.open(url, e.ctrlKey ? "_blank" : "_self");
 			}
