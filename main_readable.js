@@ -184,14 +184,9 @@ document.addEventListener("DOMContentLoaded", function(e) {
 	//console.log("Using " + (syncStorage ? "synced" : "local") + " storage");
 
 	if (otherBookmarksId !== undefined){
-		// Load links from bookmarks and recently closed
+		// Load links from recently closed
 		chrome.sessions.getRecentlyClosed(appendListToSidebar);
 		chrome.topSites.get(appendListToSidebar);
-		chrome.bookmarks.getSubTree(otherBookmarksId, function(bookmarkTree){
-			let otherBookmarks = bookmarkTree[0].children;
-			appendListToSidebar(otherBookmarks.find(e => e.title=="m").children);
-			appendListToSidebar(otherBookmarks.find(e => e.title=="a").children);
-		});
 	}
 
 	// Load links and feeds from file

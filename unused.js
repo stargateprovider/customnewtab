@@ -211,3 +211,11 @@ li > a > img{
 	margin: 2px 0 5px 0;
 }
 */
+
+
+// Load bookmark folders
+chrome.bookmarks.getSubTree(otherBookmarksId, function(bookmarkTree){
+	let otherBookmarks = bookmarkTree[0].children;
+	appendListToSidebar(otherBookmarks.find(e => e.title=="m").children);
+	appendListToSidebar(otherBookmarks.find(e => e.title=="a").children);
+});
