@@ -244,7 +244,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
 				if (syncStorage) {
 					syncStorage.set({"staticLinks": json, "feeds": {}});
 				} else {
-					localStorage.setItem("staticLinks", json.stringify());
+					localStorage.setItem("staticLinks", JSON.stringify(json));
 					localStorage.setItem("feeds", "{}");
 				}
 				jsonDataHandler(json);

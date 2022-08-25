@@ -156,7 +156,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
 		fetch("links.json")
 		.then(response => response.json())
 		.then(json => {
-			localStorage.setItem("staticLinks", json.stringify());
+			localStorage.setItem("staticLinks", JSON.stringify(json));
 			jsonDataHandler(json);
 		});
 	}
