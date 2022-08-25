@@ -11,15 +11,28 @@
 	{"url": "https://elron.pilet.ee/et/","favIconUrl":"https://elron.pilet.ee/assets/favicon.ico"}
 ],
 "slowLinks": [[
+	{"title":"FTL mods", "url":"https://subsetgames.com/forum/viewforum.php?f=10"},
 	{"title":"y2mate", "url":"https://www.y2mate.com/en2/youtube"},
 	{"title":"TheYouMP3.com - YouTube to MP3", "url":"https://www.theyoump3.com/"},
 	{"title":"Online Audio Converter", "url":"https://online-audio-converter.com/"},
 	{"title":"Reverse Phone Lookup", "url":"https://www.revealname.com/"},
+	{"title":"SELLAITE", "url":"http://sms.sellaite.com/"},
 	{"title":"EmailOnDeck", "url":"https://www.emailondeck.com/"},
 	{"title":"Messenger", "url":"https://www.messenger.com/login/"},
 	{"title":"Imgur", "url":"https://imgur.com/"},
 	{"title":"MediaFire", "url":"https://www.mediafire.com/"},
 	{"title":"Sendspace", "url":"https://www.sendspace.com/"},
 	{"title":"JS Minifier", "url":"https://javascript-minifier.com/"},
-	{"title":"PDF OCR (searchable)", "url":"https://www.pdfconvertonline.com/pdf-to-pdf-ocr-online.html"}
+	{"title":"DB Designer", "url":"https://app.dbdesigner.net/dashboard"},
+	{"title":"PDF Merge", "url":"https://www.sodapdf.com/pdf-merge/"},
+	{"title":"PDF Crop", "url":"https://pdfresizer.com/crop"},
+	{"title":"Convertio OCR", "url":"https://convertio.co/ocr/estonian/"},
+	{"title":"PDF OCR (searchable)", "url":"https://www.pdfconvertonline.com/pdf-to-pdf-ocr-online.html"},
+	{"title":"Autoscroll", "url":"javascript:/*The%20Autoscroll%20Bookmarket:Tim%20Harper:http://tim.theenchanter.com*/var%20_ss_interval_pointer;_ss_speed=1;_ss_speed_pairs=[[0,0],[1,200.0],[1,120.0],[1,72.0],[1,43.2],[1,25.9],[2,31.0],[4,37.2],[8,44.8],[8,26.4],[16,32.0]];_ss_last_onkeypress%20=%20document.onkeypress;_ss_stop=function(){clearTimeout(_ss_interval_pointer)};_ss_start=function(){_ss_abs_speed=Math.abs(_ss_speed);_ss_direction=_ss_speed/_ss_abs_speed;_ss_speed_pair=_ss_speed_pairs[_ss_abs_speed];_ss_interval_pointer=setInterval(%27scrollBy(0,%27+_ss_direction*_ss_speed_pair[0]+%27);%20if((pageYOffset%3c=1)||(pageYOffset==document.height-innerHeight))%20_ss_speed=0;%27,_ss_speed_pair[1]);};_ss_adj=function(q){_ss_speed+=q;if(Math.abs(_ss_speed)%3e=_ss_speed_pairs.length)_ss_speed=(_ss_speed_pairs.length-1)*(_ss_speed/Math.abs(_ss_speed))};_ss_quit=function(){_ss_stop();document.onkeypress=_ss_last_onkeypress;};document.onkeypress=function(e){if((e.charCode==113)||(e.keyCode==27)){_ss_quit();return;};if(e.charCode%3e=48&&e.charCode%3c=57)_ss_speed=e.charCode-48;else%20switch(e.charCode){case%2095:_ss_adj(-2);case%2045:_ss_adj(-1);break;case%2043:_ss_adj(2);case%2061:_ss_adj(1);break;};_ss_stop();_ss_start();};_ss_stop();_ss_start();"},
+	{"title":"SurfWax", "url":"http://lookahead.surfwax.com/"},
+	{"title":"Curated List of Web Performance Optimization", "url":"https://github.com/davidsonfellipe/awesome-wpo#analyzers"},
+	{"title":"DRAWSVG", "url":"https://www.drawsvg.org/#tools"},
+	{"title":"Online Image Vectorizer", "url":"https://www.vectorizer.io/"},
+	{"title":"Online Syntax Highlighter", "url":"https://codebeautify.org/code-highlighter"},
+	{"title":"SVG Compressor", "url":"https://vecta.io/nano"}
 ]]}

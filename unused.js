@@ -156,3 +156,58 @@ searchForm.addEventListener("click", function(e){
 	}
 	searchForm.target = e.ctrlKey ? "_blank" : "_self";
 });
+
+
+// Faviconid JS-ga infolehel
+function loadFavicons() {
+	var i, icon, links = document.querySelectorAll("li > a");
+	for (i=0; i<links.length; i++) {
+		if (links[i].href.match(/[/.]youtu[.b][be][e.]/)) {
+			icon = new Image(); //document.createElement("img");
+			icon.src = "https://s.ytimg.com/yts/img/favicon-vfl8qSV2F.ico";
+			icon.alt = "yt";
+		}
+		else if (links[i].href.indexOf(".bitchute.") > -1) {
+			icon = new Image();
+			icon.src = "images/icon_bitchute.png";
+			icon.alt = "";
+		}
+		else if (links[i].href.indexOf("telegram") > -1) {
+			icon = new Image();
+			icon.src = "https://www.telegram.ee/wp-content/themes/telegram/favicon/favicon.ico";
+			icon.alt = "telegram";
+		}
+		else if (links[i].href.indexOf("in5d") > -1) {
+			icon = new Image();
+			icon.src = "https://in5d.com/wp-content/uploads/2019/03/cropped-favicon5-32x32.jpg";
+			icon.alt = "in5d";
+		}
+		else {continue;}
+		//links[i].prepend(icon);
+	}
+}
+// Sellisel juhul vaja järgmist css koodi ka:
+/*
+li > a > img{
+	max-width:16px;
+	margin-right:5px;
+	margin-bottom:1px;
+	vertical-align:text-bottom;
+}
+*/
+/*
+.scrollTop{
+	padding: 0 6px 0 6px;
+}
+.scrollTop > div{
+	width: 0; 
+	height: 0; 
+	border-left: 6px solid transparent;
+	border-right: 6px solid transparent;
+	border-bottom: 9px solid var(--main_border_color);
+	padding-bottom: 3px;
+	text-indent: -1ch;
+	font-weight: bold;
+	margin: 2px 0 5px 0;
+}
+*/
